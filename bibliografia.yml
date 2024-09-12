@@ -14,6 +14,22 @@ CorlessJK97:
     year: 1997
     isbn: 978-0-89791-875-6
 
+DefEmbebidos:
+  type: Web
+  title: "¿Qué es un Sistema Embebido? Tipos y Ejemplos"
+  author: "Bismark J.L"
+  url: 
+    value: "https://electronicaonline.net/electronica/sistemas-embebidos/"
+    date: "2024-09-12"
+
+EmbebidosC:
+  type: Web
+  title: Programación en C para Sistemas Embebidos - Guía Completa
+  author: Team Gyata
+  date: "2024-02"
+  url:
+    value: https://www.gyata.ai/es/c/c-programming-embedded-systems
+    date: "2024-09-12"
 NewmanT42:
   type: Article
   title: A Formal Theorem in Church's Theory of Types

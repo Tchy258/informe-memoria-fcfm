@@ -1,13 +1,13 @@
 #import "conf.typ": conf, guia, pronombre
 #let mostrar_guias = true
 #show: conf.with(
-    titulo: "El Título de mi Tema",
-    autor: (nombre: "María Echón", pronombre: pronombre.elle),
-    profesores: ((nombre: "Juan Pérez", pronombre: pronombre.el),),
-    coguias: ((nombre: "Juana Pérez", pronombre: pronombre.ella),),
-    supervisor: (nombre: "María Gómez", pronombre: pronombre.ella),
-    anno: "2023",
+    titulo: "Plataforma Web para programación de sistemas embebidos",
+    autor: (nombre: "Nicolás Escobar Zarzar", pronombre: pronombre.el),
+    profesores: ((nombre: " Luciano Radrigan F.", pronombre: pronombre.el),),
+    modalidad: "Memoria",
+    anno: "2024",
     espaciado_titulo: 2fr,
+    informe: false
 )
 
 #guia(visible: mostrar_guias)[Se debe quitar todas las guías (estas cajas grises) antes de entregar el documento.
@@ -44,6 +44,10 @@ En el caso de la práctica extendida, incluir detalles de la organización, su q
 
 (1 a 2 páginas)]
 
+Los sistemas embebidos @DefEmbebidos cumplen un rol fundamental en una amplia gama de dispositivos, desde electrodomésticos hasta equipos de control industrial, vehículos y aparatos médicos, encargándose de diversas funciones como manejo de sensores de temperatura, humedad, entre otros. Estos artefactos, que integran hardware y software, necesitan configuraciones y calibraciones precisas para asegurar su correcto funcionamiento. Sin embargo, su configuración suele ser un proceso complejo, ya que requiere conocimientos avanzados de programación, incluyendo el dominio de lenguajes de bajo nivel como C y C++ @EmbebidosC, y también nociones básicas de electrónica. 
+
+
+
 = Situación Actual
 
 #guia(visible: mostrar_guias)[Discutir las soluciones o recursos existentes relacionados con el problema. Justificar por qué es necesario un trabajo novedoso.
@@ -51,8 +55,8 @@ En el caso de la práctica extendida, incluir detalles de la organización, su q
 (1 a 2 páginas)]
 
 Ejemplos de referencias:
-- Conferencia: @CorlessJK97 // azucar sintactica para #cite("CorlessJK97")
-- Revista y Tesis: #cite("NewmanT42", "Turing38") // para citas múltiples se usa #cite
+- Conferencia: @CorlessJK97 // azúcar sintáctica para #cite("CorlessJK97")
+- Revista y Tesis: @NewmanT42 @Turing38 // para citas múltiples se usa #cite
 
 = Objetivos
 
