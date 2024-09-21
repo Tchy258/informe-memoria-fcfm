@@ -22,6 +22,35 @@ DefEmbebidos:
     value: "https://electronicaonline.net/electronica/sistemas-embebidos/"
     date: "2024-09-12"
 
+FFramework:
+  type: Web
+  title: "Flight Software & Embedded Systems Framework"
+  author: "California Institute of Technology"
+  url:
+    value: "https://nasa.github.io/fprime/UsersGuide/guide.html"
+    date: "2024-09-21"
+
+FrameworksPaper:
+  type: Article
+  author: 
+    - Tomislav Novosel
+    - Leonardo Jelenković
+  title: "Frameworks for embedded system development"
+  parent:
+    type: Periodical
+    title: 2011 Proceedings of the 34th International Convention MIPRO
+    publisher: Association for Symbolic Logic
+    pages: 825-828
+    url: https://ieeexplore.ieee.org/document/5967169
+
+Tinkercad:
+  type: Web
+  author: Tinkercad
+  title: Tinkercad | From mind to design in minutes
+  url:
+    value: https://www.tinkercad.com/
+    date: 2024-09-21
+
 EmbebidosC:
   type: Web
   title: Programación en C para Sistemas Embebidos - Guía Completa
