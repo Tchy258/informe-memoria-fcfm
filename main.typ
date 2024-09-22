@@ -50,7 +50,7 @@ El problema radica en que muchos de los entornos de desarrollo para sistemas emb
 
 Uno de estos entornos de desarrollo está disponible en la página web de Tinkercad @Tinkercad, esta herramienta permite la configuración y simulación de un sistema embebido genérico con una gama muy amplia de componentes, pero debido a su baja especificidad, requiere de altos conocimientos técnicos para programar y simular un sistema concreto.
 
-Ante este panorama, surge la necesidad de una plataforma web que mejore la gestión de todo el ciclo de vida del desarrollo de manera centralizada y eficiente. Esta propuesta busca ofrecer una solución integral basada en lo que hace Tinkercad, pero con un microcontrolador en concreto que no solo haga más amena la programación para funcionalidades comunes, sino que también permita la simulación, prueba y calibración de dicho sistema, mejorando así la eficiencia, precisión y seguridad en la realización de estas tareas. Todo esto de una forma intuitiva y abstrayendo la mayor parte de la lógica en C y C++ al entorno de desarrollo, otorgando una interfaz interactiva con plantillas que permitan modificar parámetros específicos a componentes fijos que el usuario final necesite mediante el arrastre de bloques de código preparado con anterioridad para la arquitectura del microcontrolador el cual se puede compilar para tener una configuración real idéntica a la simulada. 
+Ante este panorama, surge la necesidad de una plataforma web que mejore la gestión de todo el ciclo de vida del desarrollo de manera centralizada y eficiente. Esta propuesta busca ofrecer una solución integral basada en lo que hace Tinkercad, pero con un microcontrolador en concreto que no solo haga más amena la programación para funcionalidades comunes, sino que también permita la simulación, prueba y calibración de dicho sistema, mejorando así la eficiencia, precisión y seguridad en la realización de estas tareas. Todo esto de una forma intuitiva y abstrayendo la mayor parte de la lógica en C y C++ al entorno de desarrollo, otorgando una interfaz interactiva con plantillas que permitan modificar parámetros específicos a componentes fijos que el usuario final necesite mediante el arrastre de bloques de código preparado con anterioridad para la arquitectura del microcontrolador, el cual se puede compilar para tener una configuración real idéntica a la simulada. 
 
 Desarrollar esta plataforma no solo simplificaría el proceso para ingenieros y programadores, sino que también permitiría que un mayor número de personas, incluso aquellas con conocimientos limitados en el ámbito de la programación embebida, puedan trabajar de manera más accesible en el desarrollo de soluciones tecnológicas. Además, la integración de funciones de simulación y gestión de proyectos embebidos concretos ofrecerá una visión más clara del comportamiento del sistema antes de su despliegue en el mundo real, mitigando errores y optimizando el tiempo de desarrollo. Este punto es esencial, ya que esto permite que los usuarios finales reales de los sistemas embebidos sean quienes determinen como estos deben funcionar en su dominio específico.
 
@@ -102,6 +102,8 @@ El objetivo debería ser específico, medible, alcanzable, relevante al problema
 
 (\"Titularse\" no es una repuesta válida. :\))]
 
+El objetivo principal de este trabajo es crear una plataforma web que le de facilidades a usuarios, tanto técnicos como no técnicos, para la programación, simulación y verificación de sistemas embebidos que pueden ser utilizados en un entorno real con un comportamiento idéntico al simulado. Esta plataforma facilitará el desarrollo y la personalización de soluciones embebidas, mejorando la eficiencia y precisión en la implementación de estos sistemas.
+
 == Objetivos Específicos
 
 #guia(visible: mostrar_guias)[
@@ -115,8 +117,13 @@ Los objetivos específicos deberían \"sumar\" al objetivo general.
 		
 (Una lista de 3 a 7 párrafos)]
 
-+ ...
-+ ...
+
++ Diseñar e implementar una interfaz intuitiva y fácil de usar para la plataforma web, permitiendo a los usuarios programar en C y C++ de manera abstracta, configurar y calibrar sistemas embebidos de manera eficiente.
++ Desarrollar módulos que permitan la simulación y prueba de código embebido, proporcionando a los usuarios información detallada y relevante sobre el rendimiento y comportamiento del sistema en diferentes entornos.
++ Integrar funcionalidades que faciliten la gestión de proyectos embebidos, permitiendo la creación, modificación y almacenamiento de configuraciones, calibraciones y códigos fuente.
++ Implementar mecanismos de seguridad robustos para garantizar la confidencialidad, integridad y disponibilidad de los datos y configuraciones almacenados en la plataforma web, en conformidad con los estándares de seguridad de la información.
++ Realizar pruebas de validación del sistema. 
+
 
 == Evaluación
 
