@@ -51,6 +51,30 @@ Tinkercad:
     value: https://www.tinkercad.com/
     date: 2024-09-21
 
+Platformio:
+  type: Web
+  author: PlatformIO Labs
+  title: PlatformIO is a professional collaborative platform for embedded development
+  url:
+    value: https://platformio.org/
+    date: 2024-09-21
+
+Espressif:
+  type: Web
+  author: Espressif Systems
+  title: Wi-Fi & Bluetooth MCUs and AIoT Solutions I Espressif Systems
+  url: 
+    value: https://www.espressif.com/
+    date: 2024-09-21
+
+Arduino:
+  type: Web
+  author: Arduino
+  title: Getting Started with Arduino products
+  url:
+    value: https://www.arduino.cc/en/Guide
+    date: 2024-09-21
+
 EmbebidosC:
   type: Web
   title: Programación en C para Sistemas Embebidos - Guía Completa

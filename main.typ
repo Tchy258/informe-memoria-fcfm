@@ -44,15 +44,15 @@ En el caso de la práctica extendida, incluir detalles de la organización, su q
 
 (1 a 2 páginas)]
 
-Los sistemas embebidos @DefEmbebidos cumplen un rol fundamental en una amplia gama de dispositivos, desde electrodomésticos hasta equipos de control industrial, vehículos y aparatos médicos, encargándose de diversas funciones como manejo de sensores de temperatura, movimiento, humedad, entre otros. Estos artefactos, que integran hardware y software, necesitan configuraciones y calibraciones precisas para asegurar su correcto funcionamiento. Sin embargo, su configuración suele ser un proceso complejo, ya que requiere conocimientos avanzados de programación, incluyendo el dominio de lenguajes de bajo nivel como C y C++ @EmbebidosC, y también nociones básicas de electrónica. 
+Los sistemas embebidos @DefEmbebidos cumplen un rol fundamental en una amplia gama de dispositivos, desde electrodomésticos hasta equipos de control industrial, vehículos y aparatos médicos, encargándose de diversas funciones como manejo de sensores de temperatura, movimiento, humedad, y otros tipos de componentes variados como motores pequeños, luces, alarmas, etc. Estos artefactos, que integran hardware y software, necesitan configuraciones y calibraciones precisas para asegurar su correcto funcionamiento. Sin embargo, su configuración suele ser un proceso complejo, ya que requiere conocimientos avanzados de programación, incluyendo el dominio de lenguajes de bajo nivel como C y C++ @EmbebidosC, y también nociones básicas de electrónica. 
 
 El problema radica en que muchos de los entornos de desarrollo para sistemas embebidos actuales, si bien abstraen bastante la lógica a bajo nivel @FrameworksPaper @FFramework, son complejos y no cuentan con herramientas que simplifiquen el proceso de programación, configuración y prueba para personas sin conocimientos técnicos avanzados que requieran funcionalidades comunes. Sumado a esto, la ausencia de un método intuitivo para la simulación y verificación de estos aparatos en funcionamiento agrava la dificultad de evaluar el rendimiento de los mismos antes de su implementación en escenarios reales variados.
 
 Uno de estos entornos de desarrollo está disponible en la página web de Tinkercad @Tinkercad, esta herramienta permite la configuración y simulación de un sistema embebido genérico con una gama muy amplia de componentes, pero debido a su baja especificidad, requiere de altos conocimientos técnicos para programar y simular un sistema concreto.
 
-Ante este panorama, surge la necesidad de una plataforma web que mejore la gestión de todo el ciclo de vida del desarrollo de manera centralizada y eficiente. Esta propuesta busca ofrecer una solución integral basada en lo que hace Tinkercad, pero con un microcontrolador en concreto que no solo haga más amena la programación para funcionalidades comunes, sino que también permita la simulación, prueba y calibración de dicho sistema, mejorando así la eficiencia, precisión y seguridad en la realización de estas tareas. Todo esto de una forma intuitiva y abstrayendo la mayor parte de la lógica en C y C++ al entorno de desarrollo, otorgando una interfaz interactiva con plantillas que permitan modificar parámetros específicos a componentes fijos que el usuario final necesite mediante el arrastre de bloques de código preparado con anterioridad. 
+Ante este panorama, surge la necesidad de una plataforma web que mejore la gestión de todo el ciclo de vida del desarrollo de manera centralizada y eficiente. Esta propuesta busca ofrecer una solución integral basada en lo que hace Tinkercad, pero con un microcontrolador en concreto que no solo haga más amena la programación para funcionalidades comunes, sino que también permita la simulación, prueba y calibración de dicho sistema, mejorando así la eficiencia, precisión y seguridad en la realización de estas tareas. Todo esto de una forma intuitiva y abstrayendo la mayor parte de la lógica en C y C++ al entorno de desarrollo, otorgando una interfaz interactiva con plantillas que permitan modificar parámetros específicos a componentes fijos que el usuario final necesite mediante el arrastre de bloques de código preparado con anterioridad para la arquitectura del microcontrolador el cual se puede compilar para tener una configuración real idéntica a la simulada. 
 
-Desarrollar esta plataforma no solo simplificaría el proceso para ingenieros y programadores, sino que también permitiría que un mayor número de personas, incluso aquellas con conocimientos limitados en el ámbito de la programación embebida, puedan trabajar de manera más accesible en el desarrollo de soluciones tecnológicas. Además, la integración de funciones de simulación y gestión de proyectos embebidos concretos ofrecerá una visión más clara del comportamiento del sistema antes de su despliegue en el mundo real, mitigando errores y optimizando el tiempo de desarrollo.
+Desarrollar esta plataforma no solo simplificaría el proceso para ingenieros y programadores, sino que también permitiría que un mayor número de personas, incluso aquellas con conocimientos limitados en el ámbito de la programación embebida, puedan trabajar de manera más accesible en el desarrollo de soluciones tecnológicas. Además, la integración de funciones de simulación y gestión de proyectos embebidos concretos ofrecerá una visión más clara del comportamiento del sistema antes de su despliegue en el mundo real, mitigando errores y optimizando el tiempo de desarrollo. Este punto es esencial, ya que esto permite que los usuarios finales reales de los sistemas embebidos sean quienes determinen como estos deben funcionar en su dominio específico.
 
 
 = Situación Actual
@@ -61,11 +61,22 @@ Desarrollar esta plataforma no solo simplificaría el proceso para ingenieros y 
 
 (1 a 2 páginas)]
 
+Como fue mencionado en la introducción, existen muchos entornos de desarrollo de sistemas embebidos. En cuanto a herramientas para sistemas genéricos están Tinkercad @Tinkercad, y PlatformIO @Platformio, pero en su mayoría, estas son específicas al fabricante del microcontrolador en concreto que se intenta programar, como el de Espressif @Espressif o Arduino @Arduino.
 
+Tinkercad posee una interfaz intuitiva en una plataforma web (ver @tinkercadimg), pero al tener demasiadas opciones para construir un sistema embebido, se puede dificultar el proceso de armar una configuración en concreto, sobre todo para alguien sin muchos conocimientos de programación o electrónica, puesto que requiere que el usuario elija que microcontrolador usar, sus componentes, como estos se conectan entre sí y el código con las instrucciones a seguir. Este código también es genérico y no permite convertir el sistema embebido simulado a uno real de manera inmediata a menos que se escoja el lenguaje particular del microcontrolador, pero esto ya requiere un cierto grado de conocimiento técnico.
 
-Ejemplos de referencias:
-- Conferencia: @CorlessJK97 // azúcar sintáctica para #cite("CorlessJK97")
-- Revista y Tesis: @NewmanT42 @Turing38 // para citas múltiples se usa #cite
+#figure(
+  image("imagenes/tinkercad.png", width: 100%),
+  caption: [Plataforma de desarrollo de Tinkercad],
+) <tinkercadimg>
+
+PlatformIO brinda herramientas de alta ayuda para desarrolladores de sistemas embebidos, como un _debugger_ y analizador de código, pero estas no son de mucha utilidad a personas con pocos conocimientos técnicos que no necesariamente saben usarlas.
+
+Espressif y otros fabricantes de microcontroladores brindan soluciones para sus productos, pero aún así sus entornos no son lo suficientemente específicos para usos concretos, ya que se centran más en brindar librerías e interfaces comunes a todos los chips que fabrican, las cuales deben ser estudiadas a profundidad si se requiere un sistema concreto.
+
+Arduino incluso tiene su propio lenguaje de programación similar a C junto con un entorno de desarrollo integrado, pero al igual que con los equipos de otros fabricantes, su programación requiere conocimientos técnicos.
+
+De las soluciones actuales mencionadas, no hay ninguna que sea de uso inmediato para personas no técnicas y a fin de facilitar el proceso de desarrollo para dichos usuarios se propone la plataforma web para un microcontrolador especifico con código preparado.
 
 = Objetivos
 
