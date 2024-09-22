@@ -75,6 +75,78 @@ Arduino:
     value: https://www.arduino.cc/en/Guide
     date: 2024-09-21
 
+React:
+  type: Web
+  author: Meta Open Source
+  title: React
+  url:
+    value: https://react.dev/
+    date: 2024-09-22
+
+Typescript:
+  type: Web
+  author: Microsoft
+  title: TypeScript - JavaScript that scales.
+  url:
+    value: https://www.typescriptlang.org/
+    date: 2024-09-22
+
+Javascript:
+  type: Web
+  author: Brendan Eich
+  title: "Javascript"
+  url:
+    value: https://developer.mozilla.org/es/docs/Web/JavaScript
+    date: 2024-09-22
+
+Kotlin:
+  type: Web
+  author: JetBrains
+  title: Get started with Kotlin
+  url:
+    value: https://kotlinlang.org/docs/getting-started.html
+    date: 2024-09-22
+
+Ktor:
+  type: Web
+  author: JetBrains
+  title: "Ktor: Build Asynchronous Servers and Clients in Kotlin"
+  url:
+    value: https://ktor.io/
+    date: 2024-09-22
+
+JVM:
+  type: Web
+  author: Oracle
+  title: Java Virtual Machine Technology Overview
+  url:
+    value: https://docs.oracle.com/en/java/javase/21/vm/java-virtual-machine-technology-overview.html
+    date: 2024-09-22
+
+Java:
+  type: Web
+  author: Oracle
+  title: What is Java technology and why do I need it?
+  url:
+    value: https://www.java.com/en/download/help/whatis_java.html
+    date: 2024-09-22
+
+CMake:
+  type: Web
+  author: kitware
+  title: "CMake: A Powerful Software Build System"
+  url:
+    value: https://cmake.org/
+    date: 2024-09-22
+
+Postgresql:
+  type: Web
+  author: The PostgreSQL Global Development Group
+  title: "PostgreSQL: The world’s most advanced open source relational database"
+  url:
+    value: https://www.postgresql.org/
+    date: 2024-09-22
+
 EmbebidosC:
   type: Web
   title: Programación en C para Sistemas Embebidos - Guía Completa

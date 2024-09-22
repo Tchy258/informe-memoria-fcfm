@@ -118,8 +118,9 @@ Los objetivos específicos deberían \"sumar\" al objetivo general.
 (Una lista de 3 a 7 párrafos)]
 
 
-+ Diseñar e implementar una interfaz intuitiva y fácil de usar para la plataforma web, permitiendo a los usuarios programar en C y C++ de manera abstracta, configurar y calibrar sistemas embebidos de manera eficiente.
++ Diseñar e implementar una interfaz intuitiva y fácil de usar para la plataforma web, permitiendo a los usuarios programar en C y C++ de manera abstracta, configurar y calibrar sistemas embebidos eficientemente. 
 + Desarrollar módulos que permitan la simulación y prueba de código embebido, proporcionando a los usuarios información detallada y relevante sobre el rendimiento y comportamiento del sistema en diferentes entornos.
++ Diseñar el _backend_ del sistema, utilizando una arquitectura robusta que permita compilar las plantillas de código solicitadas por los usuarios de manera segura y eficiente.
 + Integrar funcionalidades que faciliten la gestión de proyectos embebidos, permitiendo la creación, modificación y almacenamiento de configuraciones, calibraciones y códigos fuente.
 + Implementar mecanismos de seguridad robustos para garantizar la confidencialidad, integridad y disponibilidad de los datos y configuraciones almacenados en la plataforma web, en conformidad con los estándares de seguridad de la información.
 + Realizar pruebas de validación del sistema. 
@@ -138,6 +139,19 @@ Describe cómo vas a poder evaluar el trabajo en términos de cuán bien cumple 
 Una descripción general de la solución propuesta: los datos, las técnicas, las tecnologías, las herramientas, los lenguajes, los marcos, etc., que se usarán para intentar lograr los objetivos planteados. Aquí hay que contestar la pregunta: ¿_cómo_ vas a lograr los objetivos planteados? Aquí, sí, está muy bien hablar de Javascript, CNNs, Numpy, Django, índices invertidos, árboles wavelet, privacidad diferencial, PageRank, Diffie--Hellman, triangulaciones de Delaunay, CUDA, Postgres, etc.
     
 (1 a 2 páginas)]
+
+Para la solución propuesta se usará como base la placa disponible en la @placa fabricada a la medida por el profesor Luciano Radrigan:
+
+#figure(
+  image("imagenes/placa.jpg", width: 100%),
+  caption: "Diagrama de placa con microcontrolador para simulación e implementación de sistemas embebidos"
+) <placa>
+
+A esta placa se le podrán modificar diversos parámetros en una interfaz muy similar a la de Tinkercad@Tinkercad, que se implementará usando el _framework_ React@React. Se escoge esta tecnología en particular por su abundancia de documentación y características, las que facilitarán el desarrollo de los módulos más complejos, como la simulación del sistema. Además se utilizará el lenguaje Typescript@Typescript el cual, gracias a su sistema de tipos, prevendrá muchos tipos de errores comunes que se cometen al utilizar JavaScript@Javascript corriente.
+
+En cuanto al _backend_ se propone usar el lenguaje Kotlin@Kotlin y el _framework_ Ktor@Ktor, principalmente por familiaridad con el lenguaje y la característica de ser un lenguaje compilado hacia la Java Virtual Machine (JVM)@JVM, esto lo hace eficiente y permite llevar el backend a cualquier plataforma que soporte Java@Java. Al solicitar compilación de código de parte de los usuarios, el servidor recibirá los parámetros a modificar en las plantillas de código que tiene disponibles, realizará los cambios correspondientes y delegará la tarea de compilación a la herramienta CMake@CMake, que tendrá todas las instrucciones para construir los archivos binarios finales, los cuales serán escritos a un archivo temporal que posteriormente será enviado al usuario. Este archivo compilado permanecerá en el sistema por un plazo máximo de 24 horas durante las cuales el usuario puede solicitar modificaciones que serán procesadas de manera inmediata gracias a la propiedad de CMake de ser un sistema de ensamblaje incremental.
+
+Para almacenar los datos de los usuarios incluyendo sus credenciales de acceso y sus simulaciones se utilizará el motor de base de datos relacional PostgreSQL@Postgresql, este se elije porque ya se sabe de antemano que tipo de componentes estarán disponibles en el sistema para fabricar las simulaciones, lo que permitirá indexar las tablas agilizando en gran medida cualquier consulta que se realice.
 
 = Plan de Trabajo (Preliminar)
 
