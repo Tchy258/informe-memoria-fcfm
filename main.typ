@@ -133,6 +133,8 @@ Describe cómo vas a poder evaluar el trabajo en términos de cuán bien cumple 
 
 (1 a 2 párrafos)]
 
+El éxito de este trabajo se mide según que tan satisfechos queden los usuarios finales con el sistema embebido final, es decir, que tan útil fue la simulación y programación del aparato al aplicarlo en un entorno real. También es importante la usabilidad de la plataforma, que los usuarios finales entiendan como usarla de manera intuitiva.
+
 = Solución Propuesta
 
 #guia(visible: mostrar_guias)[
@@ -160,8 +162,17 @@ Aquí se puede dar una lista preliminar de los pasos que se van a seguir para de
     
 (0.5 a 2 páginas)]
 
-+ ...
-+ ...
++ Investigar y aprender a profundidad las tecnologías a usar para desarrollar el trabajo (React y Ktor) [Oct-Dic 2024]
++ Diseñar un diagrama que describa una historia de usuario, mostrando todo lo que un usuario puede hacer en la plataforma. [Oct-Nov 2024]
++ Diseñar un diagrama de flujo que describa todas las funcionalidades que posee el backend, mostrando las posibles respuestas que este puede dar a diversas solicitudes. [Oct-Nov 2024] 
++ Diseñar un mockup de la interfaz de usuario de la plataforma [Nov 2024]
++ Programar la vista principal de la plataforma, mostrando la placa y sus componentes (solo _frontend_) [Nov-Dic 2024]
++ Diseñar un esquema de la base de datos de la plataforma [Nov-Dic 2024]
++ Programar el módulo de simulaciones con abstracciones de código (solo _frontend_)  [Mar-Abr 2025]
++ Ajustar el diagrama de base de datos e implementarlo en Ktor según las vistas hechas [Abr-May 2025]
++ Crear _endpoints_ que permitan el inicio de sesión, almacenamiento de configuraciones y solicitudes de compilación de código por parte de usuarios finales [Abr-Jun 2025]
++ Probar a cabalidad la plataforma con usuarios y los sistemas embebidos resultantes de su uso [Jun-Jul 2025]
+#pagebreak()
 
 #bibliography(
     "bibliografia.yml",
