@@ -14,6 +14,18 @@ CorlessJK97:
     year: 1997
     isbn: 978-0-89791-875-6
 
+Delaunay1934:
+  type: article
+  author:
+    name: Delaunay B.
+  title: Sur la sphère vide. À la mémoire de Georges Voronoi
+  page-range: 793-800
+  parent:
+    title: Bulletin of Academy of Sciences of the USSR
+    year: 1934
+    volume: 7
+    language: fr
+
 NewmanT42:
   type: Article
   title: A Formal Theorem in Church's Theory of Types
