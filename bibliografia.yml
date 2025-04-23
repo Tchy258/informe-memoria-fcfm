@@ -26,6 +26,20 @@ Delaunay1934:
     volume: 7
     language: fr
 
+PolyllaPaper:
+  type: article
+  author: [
+    name: Salinas Fernández S.,
+    name: Hitschfeld Kahler N.,
+    name: Ortiz Bernardin A.,
+    name: Si H.
+    ]
+  title: "POLYLLA: polygonal meshing algorithm based on terminal-edge regions"
+  publisher: Springer
+  date: 2022-02
+  doi: 10.1007/s00366-022-01643-4
+
+
 NewmanT42:
   type: Article
   title: A Formal Theorem in Church's Theory of Types
