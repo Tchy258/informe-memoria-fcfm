@@ -17,7 +17,7 @@ CorlessJK97:
 Delaunay1934:
   type: article
   author:
-    name: Delaunay B.
+    name: B. Delaunay
   title: Sur la sphère vide. À la mémoire de Georges Voronoi
   page-range: 793-800
   parent:
@@ -26,19 +26,82 @@ Delaunay1934:
     volume: 7
     language: fr
 
+TrianglePaper:
+  type: article
+  author: 
+    name: J. R. Shewchuk
+  title: "Triangle: Engineering a 2D Quality Mesh Generator and Delaunay Triangulator"
+  page-range: 203-222
+  parent:
+    title: "Applied Computational Geometry: Towards Geometric Engineering"
+    editor: [Ming C. Lin, Dinesh Manocha]
+    date: 1996-05
+    publisher: 
+      name: Springer-Verlag
+      location: Berlin
+    volume: 1148
+
 PolyllaPaper:
   type: article
   author: [
-    name: Salinas Fernández S.,
-    name: Hitschfeld Kahler N.,
-    name: Ortiz Bernardin A.,
-    name: Si H.
+    name: S. Salinas Fernández,
+    name: N. Hitschfeld Kahler,
+    name: A. Ortiz Bernardin,
+    name: H. Si
     ]
   title: "POLYLLA: polygonal meshing algorithm based on terminal-edge regions"
   publisher: Springer
   date: 2022-02
-  doi: 10.1007/s00366-022-01643-4
+  serial-number:
+    doi: 10.1007/s00366-022-01643-4
 
+Detri2:
+  type: web
+  title: Detri2 is a C++ program for generating (weighted) Delaunay triangulations for (weighted) point sets in 2d.
+  author: H. Si
+  url: https://www.wias-berlin.de/people/si/detri2.html
+  parent:
+    type: proceedings
+    author: H. Si
+    title: An introduction to unstructured mesh generation methods and softwares for scientific computing.
+    year: 2019
+
+RupertPaper:
+  type: Article
+  title: A Delaunay Refinement Algorithm for Quality 2-Dimensional Mesh Generation.
+  page-range: 548-585
+  parent:
+    title: "Journal of Algorithms"
+    year: 1995-05
+
+LawsonAlgo:
+  type: article
+  author: C. L. Lawson
+  title: Software for $C^1$ Surface Interpolation.
+  page-range: 161-194
+  year: 1977
+  parent:
+    type: periodical
+    title: Mathematical Software III
+    editor: J. R. Rice
+    publisher: Academic Press
+
+HalfEdgeStruct:
+  type: web
+  author: [R. Ng, J. Ragan-Kelley]
+  title: Computer Graphics and Imaging cs184/284a
+  url: https://cs184.eecs.berkeley.edu/sp19/article/15/the-half-edge-data-structure
+  year: 2019
+  parent:
+    title: University of California
+    location: Berkeley
+
+RepoPolylla:
+  type: repository
+  title: Polylla-Mesh-DCEL
+  author: [S. Salinas, R. Carrasco]
+  url: https://github.com/ssalinasfe/Polylla-Mesh-DCEL/tree/main
+  year: 2022
 
 NewmanT42:
   type: Article
