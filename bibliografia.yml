@@ -66,8 +66,9 @@ Detri2:
     title: An introduction to unstructured mesh generation methods and softwares for scientific computing.
     year: 2019
 
-RupertPaper:
+RuppertPaper:
   type: Article
+  author: J. Ruppert
   title: A Delaunay Refinement Algorithm for Quality 2-Dimensional Mesh Generation.
   page-range: 548-585
   parent:
@@ -102,6 +103,53 @@ RepoPolylla:
   author: [S. Salinas, R. Carrasco]
   url: https://github.com/ssalinasfe/Polylla-Mesh-DCEL/tree/main
   year: 2022
+
+Lepp:
+  type: article
+  title: "New Longest-Edge Algorithms for the Refinement and/or Improvement of Unstructured Triangulations"
+  author: M.C. Rivara
+  date: 1997
+  parent:
+    title: "International Journal for Numerical Methods In Engineering"
+    volume: 40
+    page-range: 3313-3324
+
+Voronoi:
+  type: article
+  title: "Nouvelles applications des paramètres continus à la théorie des formes quadratiques. Premier mémoire. Sur quelques propriétés des formes quadratiques positives parfaites"
+  author: G. Voronoi
+  date: 1908
+  page-range: 97-178
+  doi: 10.1515/crll.1908.133.97
+  parent:
+    title: "Journal für die Reine und Angewandte Mathematik"
+    language: fr
+
+VEM:
+  type: article
+  title: Basic principles of virtual element methods
+  author: [
+    "L. Beirão da Veiga",
+    "F. Brezzi",
+    "G. Manzini",
+    "L. Marini",
+    "A. Russo"
+  ]
+  date: 2013
+  page-range: 199-214
+  parent:
+    title: Math Models Methods Appl Sci
+    volume: 23
+
+Circumcircle:
+  type: article
+  title: Lecture Notes on Geometric Robustness
+  author: J. R. Shewchuk
+  date: 2013-04-15
+  page-range: 19-20
+  parent:
+    title: "Department of Electrical Engineering and Computer Sciences, University of California at Berkeley"
+    
 
 NewmanT42:
   type: Article
