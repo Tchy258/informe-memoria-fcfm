@@ -31,12 +31,12 @@ Uno de los problemas recurrentes en este ámbito es la generación automática d
 
 Una triangulación de Delaunay se define como tal si cumple con la propiedad de que para todos los triángulos de la triangulación, se cumple que el circuncírculo del triángulo solo contiene a los vértices de su triángulo respectivo y no los vértices de cualquier otro (ver @ejemplo_delaunay). Estas son de particular importancia porque maximizan el tamaño del ángulo más pequeño de todos los triángulos que la componen, esto es relevante porque previene problemas de precisión que ocurren al tener ángulos muy agudos los cuales propician 'casos degenerados' donde los puntos de un triángulo son interpretados como colineales lo cual puede provocar cálculos erróneos e incluso que los programas que trabajen con las mallas resultantes que no sean lo suficientemente robustos fallen por completo en el peor de los casos. 
 
-Este trabajo de memoria se enfoca en el desarrollo y análisis de una estrategia alternativa de generación de mallas en dos dimensiones, basada en el concepto de *cavidad* o _concavity_ como se describe en el artículo Triangle @TrianglePaper. La idea central es que, a partir de una triangulación de Delaunay (como la de la @ejemplo_delaunay), se seleccionan ciertos triángulos utilizando un criterio definido por el usuario. Luego, se calculan los circuncentros de estos triángulos, y se identifican los conjuntos de triángulos de la malla cuyo circuncírculo contiene alguno de estos puntos por separado. La unión de estos triángulos vecinos para un punto $p$ forma una *cavidad*, y su cápsula convexa define un nuevo polígono. Este procedimiento permite generar regiones poligonales que pueden servir como base para construir mallas más estructuradas o adaptativas.
+Este trabajo de memoria se enfoca en el desarrollo y análisis de una estrategia alternativa de generación de mallas en dos dimensiones, basada en el concepto de *cavidad* o _concavity_ como se describe en el artículo Triangle @TrianglePaper. La idea central es que, a partir de una triangulación de Delaunay (como la de la @ejemplo_delaunay), se seleccionan ciertos triángulos utilizando un criterio definido por el usuario. Luego, se calculan los circuncentros de estos triángulos, y se identifican los conjuntos de triángulos de la malla cuyo circuncírculo contiene alguno de estos puntos por separado. La unión de las aristas del borde de estos triángulos vecinos para un punto $p$ forma una *cavidad*, la cual define un nuevo polígono. Este procedimiento permite generar regiones poligonales que pueden servir como base para construir un nuevo tipo de mallas poligonales.
 
 
 #figure(
     image("imagenes/Delaunay_circumcircles_vectorial.svg", width: 50%),
-    caption: "Triangulación de Delaunay con circuncírculos compuesta por 10 vértices.",
+    caption: "Triangulación de Delaunay con circuncírculos compuesta por 10 vértices."
 ) <ejemplo_delaunay>
 
 A modo ilustrativo, en la @ejemplo_seleccion_triangulos se presenta una selección de triángulos a partir de la triangulación de la @ejemplo_delaunay.
@@ -46,11 +46,11 @@ A modo ilustrativo, en la @ejemplo_seleccion_triangulos se presenta una selecci�
     caption: [Selección de triángulos para formar un polígono a partir de una cavidad.]
 ) <ejemplo_seleccion_triangulos>
 
-En este ejemplo, se seleccionaron dos triángulos $t_0$ y $t_1$, cuyos respectivos circuncentros están representados por los puntos $p_0$ y $p_1$. Estos puntos están contenidos en los circuncírculos de varios triángulos vecinos, incluyendo aquellos que los generaron. La unión de los triángulos que contienen a $p_0$ y la unión de los triángulos que contienen a $p_1$ forman cada uno una cavidad, las cuales se pueden ver en la @ejemplo_poligono_cavidad.
+En este ejemplo, se seleccionaron dos triángulos $t_0$ y $t_1$, cuyos respectivos circuncentros están representados por los puntos $p_0$ y $p_1$. Estos puntos están contenidos en los circuncírculos de varios triángulos vecinos, incluyendo aquellos que los generaron. La unión de las aristas de borde de los triángulos que contienen a $p_0$ y la unión de las aristas de borde de los triángulos que contienen a $p_1$ forman cada uno una cavidad, las cuales se pueden ver en la @ejemplo_poligono_cavidad.
 
 #figure(
     image("imagenes/resultado.png", width: 30%),
-    caption: [Polígonos resultantes de las cavidades con capsula convexa en azul]
+    caption: [Polígonos resultantes de las cavidades marcados en azul]
 ) <ejemplo_poligono_cavidad>
 
 
@@ -66,37 +66,34 @@ La necesidad de desarrollar nuevas estrategias para la generación de mallas res
 //_Mencionar algoritmos que generen cavidades_
 Existen muchos algoritmos para generación de mallas poligonales, siendo los más relevantes para este trabajo Triangle @TrianglePaper y Polylla @PolyllaPaper.
 
-El algoritmo Triangle @TrianglePaper se basa en el algoritmo de Ruppert @RuppertPaper y consta de 4 etapas, de las cuales las primeras 2 son exactamente las mismas que las de Ruppert:
-
-En la primera etapa se recibe como entrada un _planar straight line graph_ (o PSLG) que consiste en un conjunto de vértices y aristas donde los extremos de cada arista son los mismos vértices, los cuales describen el borde de un polígono (ver @PSLGGuitarra). Teniendo esta entrada, considera solo los vértices y genera una triangulación de Delaunay insertando los segmentos necesarios entre vértices, generando una malla poligonal inicial válida. Para el ejemplo de la @PSLGGuitarra, se consigue la triangulación de la @PSLGGuitarraTriangulada (el detalle de este proceso se detalla en el trabajo de Ruppert @RuppertPaper).
+El algoritmo Triangle @TrianglePaper se basa en el algoritmo de Ruppert @RuppertPaper y consta de 4 etapas, de las cuales las primeras 2 son exactamente las mismas que las de Ruppert, estas involucran triangular un _planar straight line graph_ (o PSLG), un conjunto de vértices y segmentos que describen un polígono como el de la @PSLGGuitarra, y posteriormente insertar los segmentos originales de la triangulación como se ve en la @PSLGGuitarraTriangulada y la @PSLGGuitarraConstrained.
 
 #figure(
     image("/imagenes/pslg.png", width: 80%),
-    caption: [PSLG de una guitarra electrica como se ilustra en Triangle @TrianglePaper]
+    caption: [PSLG de entrada una guitarra electrica como se ilustra en Triangle @TrianglePaper]
 ) <PSLGGuitarra>
 
 #figure(
     image("/imagenes/pslgtriangulation.png", width: 80%),
-    caption: [Triangulación del PLSG de la @PSLGGuitarra @TrianglePaper]
+    caption: [Triangulación del PSLG de la @PSLGGuitarra con segmentos originales faltantes @TrianglePaper]
 ) <PSLGGuitarraTriangulada>
 
-Dado que esta malla no describe precisamente al polígono original del PLSG, la segunda etapa consta de reintroducir los segmentos originales del PLSG, esto se puede hacer de 2 maneras posibles según preferencia del usuario. La primera es insertar un nuevo vértice que corresponda al punto medio de alguno de los segmentos que no aparezcan en la triangulación anterior y usar el algoritmo incremental de Lawson @LawsonAlgo para obtener una nueva triangulación de Delaunay basada en la anterior con el vértice adicional. Esto provoca que el segmento original se divida en 2 y la nueva triangulación podría tener el segmento original formado por estos 2 sub segmentos. En caso de que esto no se cumpla, el proceso de insertar un vértice del punto medio se repite recursivamente para los sub segmentos hasta que el segmento original exista como una secuencia de segmentos lineales. La manera alternativa de insertar los segmentos originales, y la que se utiliza por defecto, es convertir la triangulación a una triangulación de Delaunay restringida, en la cual los segmentos originales deben aparecer, esto se logra borrando los triángulos que intersequen el segmento que se desea agregar y luego re triangulando las regiones a cada lado del segmento insertado, resultando en la @PSLGGuitarraConstrained.
 
 #figure(
     image("/imagenes/pslgconstrained.png", width: 80%),
-    caption: [Triangulación restringida del PLSG de la @PSLGGuitarra @TrianglePaper]
+    caption: [Triangulación restringida del PSLG de la @PSLGGuitarra @TrianglePaper]
 ) <PSLGGuitarraConstrained>
 
-La tercera etapa difiere del algoritmo de Ruppert y consiste en remover los triángulos extra que están fuera del borde definido por el PSLG original, como aquellos presentes en zonas que originalmente eran no convexas, a las cuales Shewchuk llama concavidades, y los presentes en agujeros (como los del interior del cuerpo de la guitarra en el ejemplo). Esto lo logra recorriendo los triángulos con un algoritmo DFS que parte desde algún triángulo y se propaga a sí mismo eliminando todos los segmentos que no estaban adentro del polígono definido por el PSLG. Para los triángulos de 'afuera', es decir, las concavidades, que forman una cápsula convexa con segmentos que no eran parte del polígono, el algoritmo se propaga desde uno o más puntos iniciales en regiones fuera del borde y comienza a eliminar todos los segmentos que encuentre hasta llegar a uno que sea parte del PLSG. En el caso de agujeros, se permite al usuario definir donde partir siguiendo la misma lógica de propagación hasta encontrar un segmento que si es parte del PLSG. Esto se ilustra en la @PSLGGuitarraDeleted.
+La tercera etapa difiere del algoritmo de Ruppert y consiste en remover los triángulos extra que están fuera del borde definido por el PSLG original, como aquellos presentes en zonas que originalmente eran no convexas, a las cuales Shewchuk llama concavidades, y los presentes en agujeros (como los del interior del cuerpo de la guitarra en el ejemplo). Esto se ilustra en la @PSLGGuitarraDeleted.
 
 #figure(
     image("/imagenes/pslgdeletedextra.png", width: 80%),
-    caption: [Triangulación restringida del PLSG de la @PSLGGuitarra con segmentos extra removidos @TrianglePaper]
+    caption: [Triangulación restringida del PSLG de la @PSLGGuitarra con segmentos extra removidos @TrianglePaper]
 ) <PSLGGuitarraDeleted>
 
-La última etapa del algoritmo consiste en el refinamiento de la malla insertando vértices y re triangulando con el algoritmo incremental de @LawsonAlgo hasta que las restricciones de ángulo mínimo y área máxima de triángulo definidas por el usuario se cumplan. Esta inserción se hace siguiendo 2 reglas, la regla de _segmentos encerrados_ y la de los _triángulos malos_ dándole siempre prioridad a la primera:
+La última etapa del algoritmo consiste en el refinamiento de la malla insertando vértices y re triangulando con el algoritmo incremental de Lawson @LawsonAlgo hasta que las restricciones de ángulo mínimo y área máxima de triángulo definidas por el usuario se cumplan. Esta inserción se hace siguiendo 2 reglas, la regla de _segmentos encerrados_ y la de los _triángulos malos_ dándole siempre prioridad a la primera:
 - El _círculo diametral_ de un segmento es el círculo único más pequeño que contiene el segmento como su diámetro. Un segmento se dice que está _encerrado_ si un punto que no es un extremo del segmento está dentro de su círculo diametral. Cualquier segmento encerrado que aparezca se separa insertando un vértice en su punto medio. Los dos sub segmentos resultantes tienen círculos diametrales más pequeños y podrían estar o no estar encerrados. El proceso se repite hasta que no queden segmentos encerrados como se ve en la @DiametralCircle.
-- El _circuncírculo_ de un triángulo es el círculo único cuya circunferencia pasa por todos los vértices del triángulo. Un triángulo se dice que es _malo_ si tiene un ángulo que es muy pequeño o un área que es muy grande para satisfacer las restricciones impuestas por el usuario. Un triángulo malo se separa insertando un vértice en su _circuncentro_ (el centro de su circuncírculo). Está asegurado que el triángulo malo será eliminado como se ve en la @CavityDeletion para mantener la propiedad de Delaunay. Si el vértice insertado encierra un segmento (como se define en la regla del círculo diametral), este será removido deshaciendo la inserción y los segmentos que encerraba se separarán según la regla del círculo diametral.
+- El _circuncírculo_ de un triángulo es el círculo único cuya circunferencia pasa por todos los vértices del triángulo. Un triángulo se dice que es _malo_ si tiene un ángulo que es muy pequeño o un área que es muy grande para satisfacer las restricciones impuestas por el usuario. Un triángulo malo se destruye insertando un vértice en su _circuncentro_ (el centro de su circuncírculo). Está asegurado que el triángulo malo será eliminado como se ve en la @CavityDeletion para mantener la propiedad de Delaunay. Si el vértice insertado encierra un segmento (como se define en la regla del círculo diametral), este será removido deshaciendo la inserción y los segmentos que encerraba se separarán según la regla del círculo diametral.
 
 #figure(
     image("/imagenes/diametralcircle.png", width: 80%),
@@ -118,30 +115,25 @@ Para el ejemplo de la @PSLGGuitarra, la malla resultante generada por Triangle e
 Esta última parte del algoritmo es de particular importancia, ya que el criterio del circuncírculo es análogo al de la cavidad, sin embargo, en este caso solo se utiliza para refinar la malla y re triangular, pero no para generar mallas nuevas. Este trabajo de memoria busca explorar más a fondo este proceso y utilizarlo para generar mallas nuevas, lo cual en la actualidad no tiene ninguna implementación conocida. 
 
 
-Por otro lado, el algoritmo Polylla, busca generar una malla poligonal a partir de una triangulación arbitraria, usando lo que denomina como _Terminal-edge regions_ o regiones de arista terminal, definidas según el _longest edge propagation path_ (camino de propagación de arista más larga o _Lepp_ @Lepp) de los triángulos, las cuales utiliza para generar una partición de la triangulación que se asemeja a un diagrama de Voronoi @Voronoi.
+Por otro lado, el algoritmo Polylla, busca generar una malla poligonal a partir de una triangulación arbitraria, usando lo que denomina como _Terminal-edge regions_ o regiones de arista terminal, definidas según el _longest edge propagation path_ (camino de propagación de arista más larga o _Lepp_ @Lepp) de los triángulos, las cuales utiliza para generar una partición de la triangulación que se asemeja a un diagrama de Voronoi @Voronoi. En la @LeppExample se puede ver un ejemplo de región de arista terminal.
 
 En el contexto de este trabajo, un diagrama de Voronoi se entenderá como una partición de un polígono $P$ en regiones o 'celdas' $R_i$, de las cuales cada una contiene un punto $p_i$ llamado 'semilla' y los puntos $q$ contenidos en $R_i$ cumplen que $||q-p_i|| < ||q - p_j|| forall p_i, p_j in P, i != j$ donde $p_j$ es la semilla de cualquier otra celda distinta a $R_i$. El diagrama de Voronoi también se le conoce como el _dual_ de una triangulación de Delaunay, esto se debe a que, dada una triangulación de Delaunay, se puede obtener su diagrama de Voronoi equivalente si los circuncentros de los triángulos se convierten en semillas para las regiones de Voronoi y viceversa. En la @VoronoiExample se puede ver una triangulación de Delaunay y su diagrama de Voronoi equivalente.
 
-#figure(
-    grid(
-    columns: 2,
-    gutter: auto,
-    image("/imagenes/voronoidual.png", width: 70%),
-    image("/imagenes/voronoi.png", width: 70%),
-    ),
-    caption: [Triangulación de Delaunay y su Diagrama de Voronoi dual @PolyllaPaper]
-) <VoronoiExample>
-
-
-El _Lepp_ o camino de propagación de arista más larga de un triángulo se define de la siguiente manera: Por cada triángulo $t_i$ en cualquier triangulación $Omega$,
-el $L e p p(t_i)$ es la lista ordenada de todos los triángulos $t_0,t_1,t_2, ..., t_(l-1), t_l$ con $l in NN$,
-tal que $t_i$ es el triángulo vecino de $t_(i-1)$ a través de la arista más larga de $t_(i-1)$, para $i = 1,2,...,l$.
-Si una arista más larga es compartida por $t_(l-1)$ y $t_l$ esta se define como una arista terminal donde termina el Lepp y $t_(l-1)$ y $t_l$ son triángulos terminales. Una región de arista terminal se define como la unión de los triángulos $t$ tal que $L e p p (t)$ termina en la misma arista terminal. En la @LeppExample se puede ver un ejemplo de región de arista terminal.
 
 #figure(
     image("/imagenes/lepp.png", width: 100%),
     caption: [Región de arista terminal. a) $L e p p (t_0)$ donde la arista roja es la arista terminal. b) Cuatro Lepps con la misma arista terminal: $L e p p (t_a)$, $L e p p (t_b)$, $L e p p (t_c)$, $L e p p (t_d)$. c) Región de arista terminal generada por la unión de los Lepp de b) @PolyllaPaper]
 ) <LeppExample>
+
+#figure(
+    grid(
+    columns: 2,
+    gutter: auto,
+    image("/imagenes/voronoidual.png", width: 50%),
+    image("/imagenes/voronoi.png", width: 50%),
+    ),
+    caption: [Triangulación de Delaunay y su Diagrama de Voronoi dual @PolyllaPaper]
+) <VoronoiExample>
 
 Además de las aristas terminales, Polylla @PolyllaPaper define los siguientes tipos de aristas. Dada una arista $e$ y dos triángulos $t_1$ y $t_2$ que comparten $e$:
 - _Frontier-edge_ o Arista frontera: $e$ no es la arista más larga ni de $t_1$ ni de $t_2$.
@@ -152,7 +144,7 @@ Además de las aristas terminales, Polylla @PolyllaPaper define los siguientes t
 Polylla consiste de tres fases: Primero etiqueta las aristas de la triangulación de entrada según las categorías anteriores para formar regiones terminales y además designa un _triángulo semilla_ en cada región de arista terminal para construir las regiones. Luego, a partir de cada triángulo semilla, hace un recorrido en sentido antihorario o _counter clockwise_ (CCW en inglés) de la región de arista terminal para encontrar aristas frontera las cuales formaran la región. Algunas regiones pueden terminar como polígonos no simples, es decir, que tienen puntos colineales o aristas que se intersecan entre sí, por lo que hace una fase de reparación donde las aristas barrera se particionan en polígonos simples. En la @TerminalPartition se puede ver una partición de un polígono generada por regiones de arista terminal que presenta una región con un polígono no simple en verde.
 
 #figure(
-    image("/imagenes/terminalpartition.png"),
+    image("/imagenes/terminalpartition.png", width: 80%),
     caption: [a) Colección de vértices aleatorios, b) Triangulación de Delaunay donde las líneas sólidas son aristas frontera, las líneas punteadas negras son aristas internas y las aristas punteadas rojas son aristas terminales. c) Partición a partir de regiones de arista terminal @PolyllaPaper]
 ) <TerminalPartition>
 
@@ -164,8 +156,8 @@ El algoritmo Polylla destaca por sobre otros algoritmos debido a su gran eficien
 #figure(
     grid(
         columns: 2,
-        image("/imagenes/pikachutriangulization.png"),
-        image("/imagenes/pikachuPolylla.png")
+        image("/imagenes/pikachutriangulization.png", width: 90%),
+        image("/imagenes/pikachuPolylla.png", width:90%)
     ),
     caption: [Triangulación de Delaunay y su malla Polylla respectiva @RepoPolylla]
 ) <Pikachu>
@@ -218,7 +210,7 @@ Para evaluar este trabajo es necesario comparar cualitativamente la malla poligo
 
 #guia(visible: mostrar_guias, guia_solucion)
 
-La solución propuesta involucra adoptar las estructuras de datos de Polylla@RepoPolylla escritas en\ C++ y aplicarlas a este problema para generar una malla de manera eficiente. Son de especial interés 2 estructuras de datos fundamentales, la estructura `vertex` y la estructura `halfEdge`@HalfEdgeStruct.
+La solución propuesta involucra adoptar las estructuras de datos de Polylla@RepoPolylla escritas en C++ y aplicarlas a este problema para generar una malla de manera eficiente. Son de especial interés 2 estructuras de datos fundamentales, la estructura `vertex` y la estructura `halfEdge`@HalfEdgeStruct.
 
 La estructura `vertex` (@codigovertex) define las coordenadas `x` e `y` de los puntos de la malla poligonal final, además clasifica a los puntos según si son parte del borde del polígono o no, lo cual será útil al momento de representar la cápsula convexa de la malla final. También se encarga de guardar cuál `halfEdge` incide en este vértice.
 
@@ -270,30 +262,9 @@ Teniendo estas estructuras de datos se procederá de la manera siguiente:
 
 Similar a Polylla, se recibirá como entrada una triangulación de Delaunay en un conjunto de 3 archivos, un archivo `.node` con los vértices y marcador de borde, un archivo `.ele` con los triángulos de las triangulaciones (qué vértices forman cuáles triángulos) y un archivo `.neigh` con las listas de adyacencia de cada triángulo (sus vecinos). A partir de estos archivos, se creará un objeto `Triangulation`@RepoPolylla encargado de almacenar estos datos en listas de `vertex` y `halfEdge` en vectores de `C++`.
 
-Utilizando algún criterio a definir según experimentación, tales como, triángulos que cumplen o no cumplen ciertas restricciones de ángulos o de área, se seleccionará un subconjunto de los triángulos recibidos y se les calculará su circuncentro $p_i$ usando un método derivado de determinantes @Circumcircle:
+Utilizando algún criterio a definir según experimentación, tales como, triángulos que cumplen o no cumplen ciertas restricciones de ángulos o de área, se seleccionará un subconjunto de los triángulos recibidos y se les calculará su circuncentro $p_i$ y radio $r_i$ usando un método derivado de determinantes @Circumcircle.
 
-Sean $A$, $B$ y $C$ los vértices de un triángulo en orientación CCW, primero, para simplificar cálculos y sin pérdida de generalidad, se aplica una traslación a estos vértices de modo que $A$, $B$ o $C$ quede en el origen, por simplicidad, se asumirá que $A$ se traslada al origen y se definen los siguientes nuevos vértices:
-$ A' = A - A = (0,0) $
-$ B' = B - A $
-$ C' = C - A $
-También se computará un valor $D$ que corresponde al cuádruple del área del triángulo desplazado:
-$ D = 2[(A' times B')_z + (B' times C')_z + (C' times A')_z] $
-$ D = 2 (B' times C')_z $
-$ D = 2(B'_x C'_y - B'_y C'_x) $
-
-Luego las coordenadas del circuncentro desplazado $U'$ serán
-$ U'_x = 1/D [C'_y (B'_x^2 + B'_y^2) - B'_y (C'_x^2 + C'_y^2)] $
-$ U'_y = 1/D [B'_x (C'_x^2 + C'_y^2) - C'_x (B'_x^2 + B'_y^2)] $
-
-Se debe tener precaución al calcular $D$, ya que este podría ser cero, indicando la presencia de un 'caso degenerado', pero al ser la entrada una triangulación de Delaunay, tener triángulos de área cero es muy improbable.
-
-El radio del circuncírculo (que no depende de la traslación), se puede calcular como la distancia $||U' - A'|| = ||U'||$, entonces:
-$ r = ||U'|| = sqrt(U'_x^2 + U'_y^2) $
-Finalmente las coordenadas del circuncentro real estarán ubicadas en:
-$ U = U' + A $
-
-
-Conociendo los circuncentros $U_i$ y radios $r_i$ respectivos, estos se almacenan en un vector de tuplas $(U_i, r_i)$ y luego se creará un _hash map_ donde las llaves serán las coordenadas de los circuncentros y los valores serán vectores de índices para almacenar los triángulos que forman parte de cada cavidad. Por cada triángulo de la malla, se revisa si su circuncírculo contiene a cualquiera de los $p_i$ calculados y en caso de contener alguno, agregar este triángulo como parte de la cavidad que corresponde. 
+Conociendo los circuncentros y radios respectivos, estos se almacenan en un vector de tuplas $(p_i, r_i)$ y luego se creará un _hash map_ donde las llaves serán las coordenadas de los circuncentros y los valores serán vectores de índices para almacenar los triángulos que forman parte de cada cavidad. Por cada triángulo de la malla, se revisa si su circuncírculo contiene a cualquiera de los $p_i$ calculados y en caso de contener alguno, agregar este triángulo como parte de la cavidad que corresponde. 
 Finalmente, se retornan los polígonos resultantes del proceso anterior contenidos en el _hash map_.
 
 
