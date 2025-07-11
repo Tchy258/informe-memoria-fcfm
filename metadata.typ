@@ -42,10 +42,10 @@
   // Este diccionario contiene la información que solo se usa para el informe de introducción al trabajo de título
   intro: (
     // false para propuesta, true para informe
-    informe: false,
+    informe: true,
 
     // CC6908 para malla v3, CC6907 para malla v5
-    codigo: "CC6907",
+    codigo: "CC6908",
 
     // puede ser Memoria, Práctica Extendida, Doble Titulación con Magíster, Doble Titulación de Dos Especialidades
     modalidad: "Memoria",

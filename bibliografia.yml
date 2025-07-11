@@ -41,6 +41,12 @@ TrianglePaper:
       location: Berlin
     volume: 1148
 
+ConceptSource:
+  type: web
+  title: Constraints and concepts
+  url: https://en.cppreference.com/w/cpp/language/constraints.html
+  year: 2025
+
 PolyllaPaper:
   type: article
   author: [
@@ -104,6 +110,20 @@ RepoPolylla:
   url: https://github.com/ssalinasfe/Polylla-Mesh-DCEL/tree/main
   year: 2022
 
+RepoVEMPolylla:
+  type: repository
+  title: VEM-for-polylla-testing
+  author: [S. Salinas, A. Chetan]
+  url: https://github.com/ssalinasfe/VEM-for-polylla-testing
+  year: 2022
+
+RepoVEM:
+  type: repository
+  title: VirtualElementMethods
+  author: [A. Chetan]
+  url: https://github.com/justachetan/VirtualElementMethods
+  year: 2019
+
 Lepp:
   type: article
   title: "New Longest-Edge Algorithms for the Refinement and/or Improvement of Unstructured Triangulations"
@@ -149,30 +169,22 @@ Circumcircle:
   page-range: 19-20
   parent:
     title: "Department of Electrical Engineering and Computer Sciences, University of California at Berkeley"
-    
 
-NewmanT42:
-  type: Article
-  title: A Formal Theorem in Church's Theory of Types
-  doi: "10.2307/2267552"
-  author:
-    - M. H. A. Newman
-    - Alan M. Turing
-  page-range: 28-33
-  parent:
-    type: Periodical
-    title: The Journal of Symbolic Logic
-    volume: 7
-    number: 1
-    year: 1942
-    publisher: Association for Symbolic Logic
-    url: http://www.jstor.org/stable/2267552
+DPandDP:
+  type: article
+  title: Design Principles and Design Patterns
+  author: R. C. Martin
+  date: 2000
+  url: https://web.archive.org/web/20150906155800/http://www.objectmentor.com/resources/articles/Principles_and_Patterns.pdf
 
-Turing38:
-  type: Article
-  title: Systems of Logic Based on Ordinals
-  author: Alan M. Turing
-  year: 1938
-  organization: Princeton University
-  location: NJ, USA
-  doi: "10.1112/plms/s2-45.1.161"
+ShewchukRobust:
+  type: article
+  author: J .R. Shewchuk
+  title: Adaptive Precision Floating‑Point Arithmetic and Fast Robust Geometric Predicates
+  parent: 
+    title: Discrete & Computational Geometry
+    volume: 18
+    issue: 3
+  page: 305-363
+  year: 1997
+  DOI: 10.1007/PL00009321

@@ -31,7 +31,7 @@ Uno de los problemas recurrentes en este ámbito es la generación automática d
 
 Una triangulación de Delaunay se define como tal si cumple con la propiedad de que para todos los triángulos de la triangulación, se cumple que el circuncírculo del triángulo solo contiene a los vértices de su triángulo respectivo y no los vértices de cualquier otro (ver @ejemplo_delaunay). Estas son de particular importancia porque maximizan el tamaño del ángulo más pequeño de todos los triángulos que la componen, esto es relevante porque previene problemas de precisión que ocurren al tener ángulos muy agudos los cuales propician 'casos degenerados' donde los puntos de un triángulo son interpretados como colineales lo cual puede provocar cálculos erróneos e incluso que los programas que trabajen con las mallas resultantes que no sean lo suficientemente robustos fallen por completo en el peor de los casos. 
 
-Este trabajo de memoria se enfoca en el desarrollo y análisis de una estrategia alternativa de generación de mallas en dos dimensiones, basada en el concepto de *cavidad* o _concavity_ como se describe en el artículo Triangle @TrianglePaper. La idea central es que, a partir de una triangulación de Delaunay (como la de la @ejemplo_delaunay), se seleccionan ciertos triángulos utilizando un criterio definido por el usuario. Luego, se calculan los circuncentros de estos triángulos, y se identifican los conjuntos de triángulos de la malla cuyo circuncírculo contiene alguno de estos puntos por separado. La unión de las aristas del borde de estos triángulos vecinos para un punto $p$ forma una *cavidad*, la cual define un nuevo polígono. Este procedimiento permite generar regiones poligonales que pueden servir como base para construir un nuevo tipo de mallas poligonales.
+Este trabajo de memoria se enfoca en el desarrollo y análisis de una estrategia alternativa de generación de mallas en dos dimensiones, basada en el concepto de *cavidad* o _concavity_ como se describe en el artículo Triangle @TrianglePaper. La idea central es que, a partir de una triangulación de Delaunay (como la de la @ejemplo_delaunay), se seleccionan ciertos triángulos utilizando un criterio definido por el usuario. Luego, se calculan los circuncentros $p_i$ de estos triángulos, y se identifican los conjuntos de triángulos de la malla cuyo circuncírculo contiene alguno de estos puntos por separado. La unión de las aristas del borde de estos triángulos vecinos para un punto $p$ forma una *cavidad*, la cual define un nuevo polígono. Este procedimiento permite generar regiones poligonales que pueden servir como base para construir un nuevo tipo de mallas poligonales.
 
 
 #figure(
@@ -66,6 +66,7 @@ La necesidad de desarrollar nuevas estrategias para la generación de mallas res
 //_Mencionar algoritmos que generen cavidades_
 Existen muchos algoritmos para generación de mallas poligonales, siendo los más relevantes para este trabajo Triangle @TrianglePaper y Polylla @PolyllaPaper.
 
+== Triangle
 El algoritmo Triangle @TrianglePaper se basa en el algoritmo de Ruppert @RuppertPaper y consta de 4 etapas, de las cuales las primeras 2 son exactamente las mismas que las de Ruppert, estas involucran triangular un _planar straight line graph_ (o PSLG), un conjunto de vértices y segmentos que describen un polígono como el de la @PSLGGuitarra, y posteriormente insertar los segmentos originales de la triangulación como se ve en la @PSLGGuitarraTriangulada y la @PSLGGuitarraConstrained.
 
 #figure(
@@ -77,6 +78,8 @@ El algoritmo Triangle @TrianglePaper se basa en el algoritmo de Ruppert @Ruppert
     image("/imagenes/pslgtriangulation.png", width: 80%),
     caption: [Triangulación del PSLG de la @PSLGGuitarra con segmentos originales faltantes @TrianglePaper]
 ) <PSLGGuitarraTriangulada>
+
+Dado que esta malla no describe precisamente al polígono original del PLSG, la segunda etapa consta de reintroducir los segmentos originales del PLSG, esto se puede hacer de 2 maneras posibles según preferencia del usuario. La primera es insertar un nuevo vértice que corresponda al punto medio de alguno de los segmentos que no aparezcan en la triangulación anterior y usar el algoritmo incremental de Lawson @LawsonAlgo para obtener una nueva triangulación de Delaunay basada en la anterior con el vértice adicional. Esto provoca que el segmento original se divida en 2 y la nueva triangulación podría tener el segmento original formado por estos 2 sub segmentos. En caso de que esto no se cumpla, el proceso de insertar un vértice del punto medio se repite recursivamente para los sub segmentos hasta que el segmento original exista como una secuencia de segmentos lineales. La manera alternativa de insertar los segmentos originales, y la que se utiliza por defecto, es convertir la triangulación a una triangulación de Delaunay restringida, en la cual los segmentos originales deben aparecer, esto se logra borrando los triángulos que intersequen el segmento que se desea agregar y luego re triangulando las regiones a cada lado del segmento insertado, resultando en la @PSLGGuitarraConstrained.
 
 
 #figure(
@@ -114,16 +117,12 @@ Para el ejemplo de la @PSLGGuitarra, la malla resultante generada por Triangle e
 
 Esta última parte del algoritmo es de particular importancia, ya que el criterio del circuncírculo es análogo al de la cavidad, sin embargo, en este caso solo se utiliza para refinar la malla y re triangular, pero no para generar mallas nuevas. Este trabajo de memoria busca explorar más a fondo este proceso y utilizarlo para generar mallas nuevas, lo cual en la actualidad no tiene ninguna implementación conocida. 
 
-
-Por otro lado, el algoritmo Polylla, busca generar una malla poligonal a partir de una triangulación arbitraria, usando lo que denomina como _Terminal-edge regions_ o regiones de arista terminal, definidas según el _longest edge propagation path_ (camino de propagación de arista más larga o _Lepp_ @Lepp) de los triángulos, las cuales utiliza para generar una partición de la triangulación que se asemeja a un diagrama de Voronoi @Voronoi. En la @LeppExample se puede ver un ejemplo de región de arista terminal.
+== Polylla
+Por otro lado, el algoritmo Polylla, busca generar una malla poligonal a partir de una triangulación arbitraria, usando lo que denomina como _Terminal-edge regions_ o regiones de arista terminal, definidas según el _longest edge propagation path_ (camino de propagación de arista más larga o _Lepp_ @Lepp) de los triángulos, las cuales utiliza para generar una partición de la triangulación que se asemeja a un diagrama de Voronoi @Voronoi.
 
 En el contexto de este trabajo, un diagrama de Voronoi se entenderá como una partición de un polígono $P$ en regiones o 'celdas' $R_i$, de las cuales cada una contiene un punto $p_i$ llamado 'semilla' y los puntos $q$ contenidos en $R_i$ cumplen que $||q-p_i|| < ||q - p_j|| forall p_i, p_j in P, i != j$ donde $p_j$ es la semilla de cualquier otra celda distinta a $R_i$. El diagrama de Voronoi también se le conoce como el _dual_ de una triangulación de Delaunay, esto se debe a que, dada una triangulación de Delaunay, se puede obtener su diagrama de Voronoi equivalente si los circuncentros de los triángulos se convierten en semillas para las regiones de Voronoi y viceversa. En la @VoronoiExample se puede ver una triangulación de Delaunay y su diagrama de Voronoi equivalente.
 
 
-#figure(
-    image("/imagenes/lepp.png", width: 100%),
-    caption: [Región de arista terminal. a) $L e p p (t_0)$ donde la arista roja es la arista terminal. b) Cuatro Lepps con la misma arista terminal: $L e p p (t_a)$, $L e p p (t_b)$, $L e p p (t_c)$, $L e p p (t_d)$. c) Región de arista terminal generada por la unión de los Lepp de b) @PolyllaPaper]
-) <LeppExample>
 
 #figure(
     grid(
@@ -134,6 +133,17 @@ En el contexto de este trabajo, un diagrama de Voronoi se entenderá como una pa
     ),
     caption: [Triangulación de Delaunay y su Diagrama de Voronoi dual @PolyllaPaper]
 ) <VoronoiExample>
+
+El _Lepp_ o camino de propagación de arista más larga de un triángulo se define de la siguiente manera: Por cada triángulo $t_i$ en cualquier triangulación $Omega$,
+el $L e p p(t_i)$ es la lista ordenada de todos los triángulos $t_0,t_1,t_2, ..., t_(l-1), t_l$ con $l in NN$,
+tal que $t_i$ es el triángulo vecino de $t_(i-1)$ a través de la arista más larga de $t_(i-1)$, para $i = 1,2,...,l$.
+Si una arista más larga es compartida por $t_(l-1)$ y $t_l$ esta se define como una arista terminal donde termina el Lepp y $t_(l-1)$ y $t_l$ son triángulos terminales. Una región de arista terminal se define como la unión de los triángulos $t$ tal que $L e p p (t)$ termina en la misma arista terminal. En la @LeppExample se puede ver un ejemplo de región de arista terminal.
+
+#figure(
+    image("/imagenes/lepp.png", width: 100%),
+    caption: [Región de arista terminal. a) $L e p p (t_0)$ donde la arista roja es la arista terminal. b) Cuatro Lepps con la misma arista terminal: $L e p p (t_a)$, $L e p p (t_b)$, $L e p p (t_c)$, $L e p p (t_d)$. c) Región de arista terminal generada por la unión de los Lepp de b) @PolyllaPaper]
+) <LeppExample>
+
 
 Además de las aristas terminales, Polylla @PolyllaPaper define los siguientes tipos de aristas. Dada una arista $e$ y dos triángulos $t_1$ y $t_2$ que comparten $e$:
 - _Frontier-edge_ o Arista frontera: $e$ no es la arista más larga ni de $t_1$ ni de $t_2$.
@@ -150,9 +160,6 @@ Polylla consiste de tres fases: Primero etiqueta las aristas de la triangulació
 
 En la @Pikachu se puede ver una triangulación de Delaunay y la malla generada por Polylla a partir de ella.
 
-El algoritmo Polylla destaca por sobre otros algoritmos debido a su gran eficiencia en comparación a algoritmos convencionales de construcción de diagramas de Voronoi restringidos, ya que toma bastante menos tiempo en construir con una cantidad de polígonos 3 veces menor y la mitad de vértices que una malla poligonal de un diagrama de Voronoi hecho a partir de la misma triangulación. A esto se le suma también la utilidad de las mallas Polylla en simulaciones de diversos fenómenos que hacen uso del _Virtual Element Method_ (VEM) @VEM tales como mecánica computacional, dinámica de fluidos, propagación de ondas entre otros problemas que requieren soluciones numéricas de ecuaciones diferenciales parciales. El algoritmo de construcción de mallas basado en cavidades también podría generar mallas para los usos ya mencionados u otros.
-
-
 #figure(
     grid(
         columns: 2,
@@ -161,6 +168,8 @@ El algoritmo Polylla destaca por sobre otros algoritmos debido a su gran eficien
     ),
     caption: [Triangulación de Delaunay y su malla Polylla respectiva @RepoPolylla]
 ) <Pikachu>
+
+El algoritmo Polylla destaca por sobre otros algoritmos debido a su gran eficiencia en comparación a algoritmos convencionales de construcción de diagramas de Voronoi restringidos, ya que toma bastante menos tiempo en construir con una cantidad de polígonos 3 veces menor y la mitad de vértices que una malla poligonal de un diagrama de Voronoi hecho a partir de la misma triangulación. A esto se le suma también la utilidad de las mallas Polylla en simulaciones de diversos fenómenos que hacen uso del _Virtual Element Method_ (VEM) @VEM tales como mecánica computacional, dinámica de fluidos, propagación de ondas entre otros problemas que requieren soluciones numéricas de ecuaciones diferenciales parciales. El algoritmo de construcción de mallas basado en cavidades también podría generar mallas para los usos ya mencionados u otros.
 
 = Objetivos
 
@@ -203,6 +212,8 @@ Para evaluar este trabajo es necesario comparar cualitativamente la malla poligo
 + El tiempo de ejecución. ¿Es igual o más eficiente el algoritmo basado en cavidades para generar el mismo polígono que Polylla?
 + El costo en espacio. ¿Utiliza igual o menos memoria que Polylla para generar la misma malla?
 + La calidad de las mallas. ¿La malla generada por el algoritmo basado en cavidades cumple propiedades deseables como triángulos bien distribuidos con ángulos no demasiado pequeños? ¿Es útil para simulaciones?
+
+Para verificar lo anterior se hará uso de las mallas generadas a partir de cavidades para encontrar una solución numérica de una ecuación de _Poisson_ en dos dimensiones en un dominio cuadrado haciendo uso del VEM@VEM, tal como se hace con Polylla@RepoVEMPolylla @RepoVEM.
 
 = Solución Propuesta
 
@@ -262,13 +273,31 @@ Teniendo estas estructuras de datos se procederá de la manera siguiente:
 
 Similar a Polylla, se recibirá como entrada una triangulación de Delaunay en un conjunto de 3 archivos, un archivo `.node` con los vértices y marcador de borde, un archivo `.ele` con los triángulos de las triangulaciones (qué vértices forman cuáles triángulos) y un archivo `.neigh` con las listas de adyacencia de cada triángulo (sus vecinos). A partir de estos archivos, se creará un objeto `Triangulation`@RepoPolylla encargado de almacenar estos datos en listas de `vertex` y `halfEdge` en vectores de `C++`.
 
-Utilizando algún criterio a definir según experimentación, tales como, triángulos que cumplen o no cumplen ciertas restricciones de ángulos o de área, se seleccionará un subconjunto de los triángulos recibidos y se les calculará su circuncentro $p_i$ y radio $r_i$ usando un método derivado de determinantes @Circumcircle.
+Utilizando algún criterio a definir según experimentación, tales como, triángulos que cumplen o no cumplen ciertas restricciones de ángulos o de área, se seleccionará un subconjunto de los triángulos recibidos y se les calculará su circuncentro $p_i$ y radio $r_i$ usando un método derivado de determinantes @Circumcircle. La forma en que estos criterios serán aplicados, se hará con estructuras simples que definen el método `operator()` y retornan `bool`, (también llamados funtores) resultando en algo similar al patrón _composite_, para formar criterios de selección arbitrariamente complejos los cuales serán entregados al refinador, luego el refinador verificará cada triángulo con estos criterios. Se opta por el uso de funtores, porque estos proveen una api común (el método `operator()`) y pueden definirse con cualquier atributo que el criterio necesite, como un ángulo mínimo, un área mínima, etc.
 
-Conociendo los circuncentros y radios respectivos, estos se almacenan en un vector de tuplas $(p_i, r_i)$ y luego se creará un _hash map_ donde las llaves serán las coordenadas de los circuncentros y los valores serán vectores de índices para almacenar los triángulos que forman parte de cada cavidad. Por cada triángulo de la malla, se revisa si su circuncírculo contiene a cualquiera de los $p_i$ calculados y en caso de contener alguno, agregar este triángulo como parte de la cavidad que corresponde. 
+Para determinar el circuncentro de los triángulos se procederá de la manera siguiente: sean $A$, $B$ y $C$ los vértices de un triángulo en orientación CCW, primero, para simplificar cálculos y sin pérdida de generalidad, se aplica una traslación a estos vértices de modo que $A$, $B$ o $C$ quede en el origen, por simplicidad, se asumirá que $A$ se traslada al origen y se definen los siguientes nuevos vértices:
+$ A' = A - A = (0,0) $
+$ B' = B - A $
+$ C' = C - A $
+También se computará un valor $D$ que corresponde al cuádruple del área del triángulo desplazado:
+$ D = 2[(A' times B')_z + (B' times C')_z + (C' times A')_z] $
+$ D = 2 (B' times C')_z $
+$ D = 2(B'_x C'_y - B'_y C'_x) $
+
+Luego las coordenadas del circuncentro desplazado $U'$ serán
+$ U'_x = 1/D [C'_y (B'_x^2 + B'_y^2) - B'_y (C'_x^2 + C'_y^2)] $
+$ U'_y = 1/D [B'_x (C'_x^2 + C'_y^2) - C'_x (B'_x^2 + B'_y^2)] $
+
+Se debe tener precaución al calcular $D$, ya que este podría ser cero, indicando la presencia de un 'caso degenerado', pero al ser la entrada una triangulación de Delaunay, tener triángulos de área cero es muy improbable. Esto podría ocurrir por errores de precisión en los datos.
+
+Finalmente las coordenadas del circuncentro real estarán ubicadas en:
+$ U = U' + A $
+
+Conociendo los circuncentros, estos se almacenan en un vector de tuplas ($p_i$,$t_i$) donde $p_i$ es el circuncentro y $t_i$ es el índice del triángulo al cual pertenece este circuncentro. Se guardan ambos valores para solo revisar los triángulos vecinos, ya que es difícil que el circuncirculo de un triángulo muy lejano lo contenga. Luego se creará un _hash map_ donde las llaves serán las coordenadas de los circuncentros (vértices) y los valores serán vectores de índices para almacenar los triángulos que forman parte de cada cavidad. Por cada triángulo de la malla, se revisa si su circuncírculo contiene a cualquiera de los $p_i$ calculados y en caso de contener alguno, agregar este triángulo como parte de la cavidad que corresponde. Esta verificación se hará mediante el _incircleTest_ de Shewchuk@ShewchukRobust, este también hace uso de un método basado en determinantes. Una vez computadas las cavidades, se mantendrán solo las aristas de borde para generar nuevos polígonos.
 Finalmente, se retornan los polígonos resultantes del proceso anterior contenidos en el _hash map_.
 
 
-= Plan de Trabajo (Preliminar)
+= Plan de Trabajo
 
 #guia(visible: mostrar_guias, guia_plan)
 
@@ -277,6 +306,34 @@ Finalmente, se retornan los polígonos resultantes del proceso anterior contenid
 + Probar distintos criterios de selección de triángulos y guardar el registro de los resultados a medida que se escribe el informe final [agosto-septiembre].
 + Seleccionar los mejores métodos de elección de triángulos, comparar su desempeño con la generación de mallas de Polylla y registrar los datos en el informe final [septiembre-octubre].
 + Comparar el rendimiento de las mallas generadas en otras aplicaciones frente a la misma malla generada por Polylla [noviembre-diciembre].
+
+#include "gantt.typ"
+
+= Trabajo Adelantado
+
+Tras el estudio del código de Polylla@RepoPolylla, se detectaron varios problemas de diseño que hacen el código difícil de extender para otros usos, por lo tanto, se diseñó una nueva estructura del código que siga principios SOLID @DPandDP de programación orientada a objetos mostrado en la @umlnuevo.
+
+#figure(
+    image("imagenes/polylla.drawio.svg"),
+    caption: "Diagrama de clases propuesto"
+) <umlnuevo>
+
+Este diseño introduce más flexibilidad al separar la clase `Triangulation` en diversas clases con propósitos específicos cada una.
+
+La clase principal en esta estructura (la API expuesta al usuario para realizar operaciones) es la clase `PolygonalMesh`, esta clase cumple la función de integrar las otras clases en una interfaz única en común que permite diversos escenarios de configuración según el tipo de archivo de malla a leer o escribir, el algoritmo de refinamiento a utilizar y el tipo de malla subyacente.
+
+La lógica para leer y escribir mallas se abstrae en las clases que implementan `MeshReader` y `MeshWriter`, donde cada una se encarga de un tipo de archivo concreto.
+
+El almacenamiento de los datos reales de la malla, es decir, sus vértices, aristas y caras se almacenan en alguna clase que implemente `MeshData`, las cuales saben que estructura de datos tendrán que manejar mediante el uso de _concepts_ @ConceptSource, que se asemeja a las _interfaces_ de Java, en el sentido de que solo definen los métodos disponibles y su firma, pero no la implementación, con la diferencia de que los _concepts_ no definen un tipo real y solo existen para ser usados como tipos de _template_ de C++ en la declaración de las clases, métodos u atributos. Estos _templates_ permiten generalizar tipos, haciendo posible la extensión futura con otros tipos de malla de forma simple casi sin modificaciones al código existente. Para asegurar correctitud, el uso de tipos explícitos se declara en el _header_ de las clases que utilicen un tipo _template_ que requiera de un _concept_ específico, así es posible corroborar en tiempo de compilación (o incluso antes con el apoyo de herramientas de análisis estático de código) si algún tipo nuevo se adhiere correctamente al _concept_ y si es que no, la razón de por qué. Algunas de estas razones podrían ser que la firma de un método no coincide, o le falta algún atributo a la clase, en raros casos puede arrojar errores crípticos que parecen no tener sentido, como por ejemplo que el argumento de un _template_ es algún tipo primitivo como _int_ que no posee métodos, pero esto suele ser una señal de uso de dependencias circulares o similar.
+
+
+En cuanto al generador de mallas propuesto se hizo un desarrollo inicial de la clase `DelaunayCavityRefiner`, la cual sigue los pasos descritos en la solución propuesta, pero aún no está completa, ya que falta implementar la lógica de construcción de la nueva malla una vez que los triángulos que forman las cavidades son seleccionados (aquellos que contienen los puntos de los circuncentros de los triángulos elegidos por el criterio del refinador).
+
+Para los criterios, se implementaron dos funtores básicos que permiten componer otros criterios, las estructuras `AndCriteria` y `OrCriteria` que cumplen la función de ser un "y" y un "o" lógico respectivamente. También se hizo la implementación inicial del funtor `MinAngleCriterion`, el cual toma como entrada una referencia a la malla, un índice de un triángulo y determina si el triángulo tiene un ángulo menor que el especificado en su atributo `degrees`. La fórmula exacta para el cálculo de este ángulo mínimo aún está por determinarse, pero a priori utilizará algunas de las nuevas funcionalidades añadidas a la clase `vertex` como `dot` que calcula el producto punto entre 2 vértices (considerándolos como si fuesen vectores).
+
+La clase `HalfEdgeMesh` contiene la lógica de recorrido para una malla basada en _half edges_ y es en su mayoría código adaptado de Polylla @RepoPolylla.
+
+Estos avances están disponibles en el siguiente repositorio público iniciado como _fork_ de Polylla@RepoPolylla: https://github.com/Tchy258/Delaunay-cavity
 
 #bibliography(
     "bibliografia.yml",
