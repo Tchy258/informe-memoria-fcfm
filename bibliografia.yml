@@ -1,45 +1,35 @@
-CorlessJK97:
-  type: Article
-  title: A Sequence of Series for the Lambert W Function
-  author:
-    - Robert M. Corless
-    - David J. Jeffrey
-    - Donald E. Knuth
-  doi: "10.1145/258726.258783"
-  page-range: 197-204
-  parent:
-    type: Proceedings
-    title: International Symposium on Symbolic and Algebraic Computation
-    location: Kihei, Maui, Hawaii, USA.
-    year: 1997
-    isbn: 978-0-89791-875-6
-
 Delaunay1934:
   type: article
-  author:
-    name: B. Delaunay
-  title: Sur la sphère vide. À la mémoire de Georges Voronoi
+  title: Sur la sph{è}re vide. A la m{é}moire de Georges Voronoï
+  author: Delaunay, Boris
+  date: 1934
   page-range: 793-800
   parent:
-    title: Bulletin of Academy of Sciences of the USSR
-    year: 1934
-    volume: 7
-    language: fr
+    type: periodical
+    title: Известия Российской академии наук. Серия математическая
+    publisher: Российская академия наук, Математический институт им. ВА Стеклова Российской~…
+    issue: 6
+
 
 TrianglePaper:
   type: article
-  author: 
-    name: J. R. Shewchuk
-  title: "Triangle: Engineering a 2D Quality Mesh Generator and Delaunay Triangulator"
+  title: 'Triangle: Engineering a 2D quality mesh generator and Delaunay triangulator'
+  author: Shewchuk, Jonathan Richard
+  date: 1996
+  editor:
+  - Lin, Ming C.
+  - Manocha, Dinesh
   page-range: 203-222
+  serial-number:
+    isbn: 978-3-540-70680-9
+  abstract: Triangle is a robust implementation of two-dimensional constrained Delaunay triangulation and Ruppert's Delaunay refinement algorithm for quality mesh generation. Several implementation issues are discussed, including the choice of triangulation algorithms and data structures, the effect of several variants of the Delaunay refinement algorithm on mesh quality, and the use of adaptive exact arithmetic to ensure robustness with minimal sacrifice of speed. The problem of triangulating a planar straight line graph (PSLG) without introducing new small angles is shown to be impossible for some PSLGs, contradicting the claim that a variant of the Delaunay refinement algorithm solves this problem.
   parent:
-    title: "Applied Computational Geometry: Towards Geometric Engineering"
-    editor: [Ming C. Lin, Dinesh Manocha]
-    date: 1996-05
-    publisher: 
-      name: Springer-Verlag
-      location: Berlin
-    volume: 1148
+    type: proceedings
+    title: Applied Computational Geometry Towards Geometric Engineering
+    publisher:
+      name: Springer Berlin Heidelberg
+      location: Berlin, Heidelberg
+
 
 ConceptSource:
   type: web
@@ -47,19 +37,41 @@ ConceptSource:
   url: https://en.cppreference.com/w/cpp/language/constraints.html
   year: 2025
 
+Concepts2:
+  type: article
+  title: Design of Concept Libraries for C++
+  author:
+  - Sutton, Andrew
+  - Stroustrup, Bjarne
+  date: 2011
+  page-range: 97-118
+  serial-number:
+    doi: 10.1007/978-3-642-28830-2_6
+    isbn: 978-3-642-28829-6
+  parent:
+    type: proceedings
+
 PolyllaPaper:
   type: article
-  author: [
-    name: S. Salinas Fernández,
-    name: N. Hitschfeld Kahler,
-    name: A. Ortiz Bernardin,
-    name: H. Si
-    ]
-  title: "POLYLLA: polygonal meshing algorithm based on terminal-edge regions"
-  publisher: Springer
-  date: 2022-02
+  title: 'POLYLLA: polygonal meshing algorithm based on terminal-edge regions'
+  author:
+  - Salinas-Fernández, Sergio
+  - Hitschfeld-Kahler, Nancy
+  - Ortiz-Bernardin, Alejandro
+  - Si, Hang
+  page-range: 4545-4567
+  url: https://doi.org/10.1007/s00366-022-01643-4
+  date: 2022
   serial-number:
     doi: 10.1007/s00366-022-01643-4
+    issn: 1435-5663
+  abstract: This paper presents an algorithm to generate a new kind of polygonal mesh obtained from triangulations. Each polygon is built from a terminal-edge region surrounded by edges that are not the longest-edge of any of the two triangles that share them. The algorithm is termed Polylla and is divided into three phases. The first phase consists of labeling each edge of the input triangulation according to its size; the second phase builds polygons (simple or not) from terminal-edges regions using the label system; and the third phase transforms each non simple polygon into simple ones. The final mesh contains polygons with convex and non convex shape. Since Voronoi-based meshes are currently the most used polygonal meshes, we compare some geometric properties of our meshes against constrained Voronoi meshes. Several experiments were run to compare the shape and size of polygons, the number of final mesh points and polygons. For the same input, Polylla meshes contain less polygons than Voronoi meshes and the algorithm is simpler and faster than the algorithm to generate constrained Voronoi meshes. Finally, we have validated Polylla meshes by solving the Laplace equation on an L-shaped domain using the virtual element method (VEM). We show that the numerical performance of the VEM using Polylla meshes and Voronoi meshes is similar.
+  parent:
+    type: periodical
+    title: Engineering with Computers
+    issue: 5
+    volume: 38
+
 
 Detri2:
   type: web
@@ -73,35 +85,67 @@ Detri2:
     year: 2019
 
 RuppertPaper:
-  type: Article
-  author: J. Ruppert
-  title: A Delaunay Refinement Algorithm for Quality 2-Dimensional Mesh Generation.
-  page-range: 548-585
-  parent:
-    title: "Journal of Algorithms"
-    year: 1995-05
-
-LawsonAlgo:
   type: article
-  author: C. L. Lawson
-  title: Software for $C^1$ Surface Interpolation.
-  page-range: 161-194
-  year: 1977
+  title: A Delaunay Refinement Algorithm for Quality 2-Dimensional Mesh Generation
+  author: Ruppert, J.
+  date: 1995
+  page-range: 548-585
+  url: https://www.sciencedirect.com/science/article/pii/S0196677485710218
+  serial-number:
+    doi: https://doi.org/10.1006/jagm.1995.1021
+    issn: 0196-6774
+  abstract: 'We present a simple new algorithm for triangulating polygons and planar straightline graphs, It provides "shape" and "size" guarantees: •All triangles have a bounded aspect ratio.•The number of triangles is within a constant factor of optimal. Such "quality" triangulations are desirable as meshes for the finite element method, in which the running time generally increases with the number of triangles, and where the convergence and stability may be hurt by very skinny triangles. The technique we use-successive refinement of a Delaunay triangulation-extends a mesh generation technique of Chew by allowing triangles of varying sizes. Compared with previous quadtree-based algorithms for quality mesh generation, the Delaunay refinement approach is much simpler and generally produces meshes with fewer triangles. We also discuss an implementation of the algorithm and evaluate its performance on a variety of inputs.'
   parent:
     type: periodical
-    title: Mathematical Software III
-    editor: J. R. Rice
+    title: Journal of Algorithms
+    issue: 3
+    volume: 18
+
+
+LawsonAlgo:
+  type: anthos
+  title: Software for C1 Surface Interpolation
+  author: Lawson, C.L.
+  date: 1977
+  editor: Rice, John R.
+  page-range: 161-194
+  url: https://www.sciencedirect.com/science/article/pii/B978012587260750011X
+  serial-number:
+    doi: https://doi.org/10.1016/B978-0-12-587260-7.50011-X
+    isbn: 978-0-12-587260-7
+  abstract: Publisher Summary This chapter discusses algorithm and underlying theory of software for C1 surface interpolation. There has been practically no theory to guide the development of algorithms for triangulation and there has been no practical static global criterion to characterize a preferred triangulation. An interpolation algorithm is interfaced with algorithms for contour plotting or surface perspective plotting. If the subroutines are available for doing contour or surface perspective plotting for data given on a rectangular grid, then the surface interpolation algorithm can be used to produce the values needed at the lattice points of a rectangular grid. The computerized representation of surfaces is a central issue in the field of computer-aided geometric design and plays an important role in the field of finite element methods. Some methods of building a triangular grid with a given set of nodes start by locating the boundary points of the convex hull of the point set. In some reasonable triangulation algorithms, the number of boundary points of the convex hulls of a sequence of sub­sets has an effect on the operation count.
+  parent:
+    type: anthology
+    title: Mathematical Software
     publisher: Academic Press
 
+
 HalfEdgeStruct:
-  type: web
-  author: [R. Ng, J. Ragan-Kelley]
-  title: Computer Graphics and Imaging cs184/284a
-  url: https://cs184.eecs.berkeley.edu/sp19/article/15/the-half-edge-data-structure
-  year: 2019
+  type: article
+  title: Designing and Implementing a General Purpose Halfedge Data Structure
+  author: Brönnimann, Hervé
+  date: 2001
+  editor:
+  - Brodal, Gerth Stølting
+  - Frigioni, Daniele
+  - Marchetti-Spaccamela, Alberto
+  page-range: 51-66
+  serial-number:
+    isbn: 978-3-540-44688-0
+  abstract: 'Halfedge data structures (HDS) are fundamental in representing combinatorial geometric structures, useful for representing any planar structures such as plane graphs and planar maps, polyhedral surfaces and boundary representations (BREPs), two-dimensional views of a three dimensional scene, etc. Many variants have been proposed in the literature, starting with the winged-edge data structure of Baumgart[2], the DCEL of [15,9], the quad-edge data structure [11], the halfedge data structure [18,12, and refs. therein]. They have been proposed in various frameworks (references too many to give here):Plane structures: including planar maps for GIS, 2D Boolean modeling, 2D graphics, scienti.c computations, computer vision. The requirements on HDS are that that some edges may be in.nite (e.g., Voronoi diagrams), or border edges (e.g., for bounded polygonal domains), it may include holes in the facets (planar maps), and that if so, one of the connected boundary cycle is distinguished as the outer boundary (the others are inner holes).Boundary representation of three-dimensional solids: including Brep representation, solid modeling, polyhedral surfaces, 3D graphics. The requirements here vary slightly: holes may still be allowed, but there is no need to distinguish an outer boundary, in.nite edges are not always useful but border edges might need to be allowed.'
   parent:
-    title: University of California
-    location: Berkeley
+    type: proceedings
+    title: Algorithm Engineering
+    publisher:
+      name: Springer Berlin Heidelberg
+      location: Berlin, Heidelberg
+
+weiler1986topological:
+  type: book
+  title: Topological structures for geometric modeling (Boundary representation, manifold, radial edge structure)
+  author: Weiler, Kevin J
+  date: 1986
+  publisher: Rensselaer Polytechnic Institute
 
 RepoPolylla:
   type: repository
@@ -126,40 +170,55 @@ RepoVEM:
 
 Lepp:
   type: article
-  title: "New Longest-Edge Algorithms for the Refinement and/or Improvement of Unstructured Triangulations"
-  author: M.C. Rivara
+  title: New longest-edge algorithms for the refinement and/or improvement of unstructured triangulations
+  author: Rivara, María-Cecilia
   date: 1997
+  page-range: 3313-3324
+  url: https://onlinelibrary.wiley.com/doi/abs/10.1002/%28SICI%291097-0207%2819970930%2940%3A18%3C3313%3A%3AAID-NME214%3E3.0.CO%3B2-%23
+  serial-number:
+    doi: https://doi.org/10.1002/(SICI)1097-0207(19970930)40:18%3C3313::AID-NME214%3E3.0.CO;2-%23
+  abstract: 'Abstract In this paper I introduce a new mathematical tool for dealing with the refinement and/or the improvement of unstructured triangulations: the Longest-Edge Propagation Path associated with each triangle to be either refined and/or improved in the mesh. This is defined as the (finite) ordered list of successive neighbour triangles having longest-edge greater than the longest edge of the preceding triangle in the path. This ideal is used to introduce two kinds of algorithms (which make use of a Backward Longest-Edge point insertion strategy): (1) a pure Backward Longest-Edge Refinement Algorithm that produces the same triangulations as previous longest-edge algorithms in a more efficient, direct and easy-to-implement way; (2) a new Backward Longest-Edge Improvement Algorithm for Delaunay triangulations, suitable to deal (in a reliable, robust and effective way) with the three important related aspects of the (triangular) mesh generation problem: mesh refinement, mesh improvement, and automatic generation of good-quality surface and volume triangulation of general geometries including small details. The algorithms and practical issues related with their implementation (both for the polygon and surface quality triangulation problems) are discussed in this paper. In particular, an effective boundary treatment technique is also discussed. The triangulations obtained with the LEPP–Delaunay algorithm have smallest angles greater than 30° and are, in practice, of optimal size. Furthermore, the LEPP–Delaunay algorithms naturally generalize to three-dimensions. © 1997 by John Wiley & Sons, Ltd.'
   parent:
-    title: "International Journal for Numerical Methods In Engineering"
+    type: periodical
+    title: International Journal for Numerical Methods in Engineering
+    issue: 18
     volume: 40
-    page-range: 3313-3324
+
 
 Voronoi:
   type: article
-  title: "Nouvelles applications des paramètres continus à la théorie des formes quadratiques. Premier mémoire. Sur quelques propriétés des formes quadratiques positives parfaites"
-  author: G. Voronoi
+  title: Nouvelles applications des paramètres continus à la théorie des formes quadratiques. Premier mémoire. Sur quelques propriétés des formes quadratiques positives parfaites.
+  author: Voronoi, Georges
   date: 1908
-  page-range: 97-178
-  doi: 10.1515/crll.1908.133.97
+  page-range: 97-102
+  url: https://doi.org/10.1515/crll.1908.133.97
+  serial-number:
+    doi: doi:10.1515/crll.1908.133.97
   parent:
-    title: "Journal für die Reine und Angewandte Mathematik"
-    language: fr
+    type: periodical
+    title: Journal für die reine und angewandte Mathematik (Crelles Journal)
+    issue: 133
+    volume: 1908
 
 VEM:
   type: article
-  title: Basic principles of virtual element methods
-  author: [
-    "L. Beirão da Veiga",
-    "F. Brezzi",
-    "G. Manzini",
-    "L. Marini",
-    "A. Russo"
-  ]
-  date: 2013
+  title: Basic Principles of Virtual Element Methods
+  author:
+  - Veiga, L.
+  - Brezzi, Franco
+  - Cangiani, Andrea
+  - Manzini, G.
+  - Marini, L.
+  - Russo, Alessandro
+  date: 2012
   page-range: 199-214
+  serial-number:
+    doi: 10.1142/S0218202512500492
   parent:
-    title: Math Models Methods Appl Sci
+    type: periodical
+    title: Mathematical Models and Methods in Applied Sciences
     volume: 23
+
 
 Circumcircle:
   type: article
@@ -179,12 +238,24 @@ DPandDP:
 
 ShewchukRobust:
   type: article
-  author: J .R. Shewchuk
-  title: Adaptive Precision Floating‑Point Arithmetic and Fast Robust Geometric Predicates
-  parent: 
-    title: Discrete & Computational Geometry
-    volume: 18
+  title: Adaptive Precision Floating-Point Arithmetic and Fast Robust Geometric Predicates
+  author: Richard Shewchuk, Jonathan
+  date: 1997-10-01
+  page-range: 305-363
+  url: https://doi.org/10.1007/PL00009321
+  serial-number:
+    doi: 10.1007/PL00009321
+    issn: 1432-0444
+  abstract: Exact computer arithmetic has a variety of uses, including the robust implementation of geometric algorithms. This article has three purposes. The first is to offer fast software-level algorithms for exact addition and multiplication of arbitrary precision floating-point values. The second is to propose a technique for adaptive precision arithmetic that can often speed these algorithms when they are used to perform multiprecision calculations that do not always require exact arithmetic, but must satisfy some error bound. The third is to use these techniques to develop implementations of several common geometric calculations whose required degree of accuracy depends on their inputs. These robust geometric predicates are adaptive; their running time depends on the degree of uncertainty of the result, and is usually small.
+  parent:
+    type: periodical
+    title: Discrete {&} Computational Geometry
     issue: 3
-  page: 305-363
-  year: 1997
-  DOI: 10.1007/PL00009321
+    volume: 18
+
+
+TriangleCodigo:
+  type: web
+  title: Triangle A Two-Dimensional Quality Mesh Generator and Delaunay Triangulator.
+  url: https://www.cs.cmu.edu/~quake/triangle.html
+  year: 2005

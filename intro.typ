@@ -20,7 +20,7 @@
     // Formato de headings
     set heading(numbering: (..n) => {
         if n.pos().len() == 1 [#numbering("1.", ..n) #h(1em)] // Espacio extra para headings de nivel 1
-        else if n.pos().len() == 2 [#none] // No numerar headings de nivel 2
+        else if n.pos().len() == 2 [#numbering("1.", ..n)] // No numerar headings de nivel 2
         else [#numbering("1.", ..n)] // Para el resto, numerar con formato 1.1.1.
     })
 
