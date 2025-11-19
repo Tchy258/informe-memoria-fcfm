@@ -259,3 +259,15 @@ TriangleCodigo:
   title: Triangle A Two-Dimensional Quality Mesh Generator and Delaunay Triangulator.
   url: https://www.cs.cmu.edu/~quake/triangle.html
   year: 2005
+
+VoronoiSVG:
+  title: A Delaunay triangulation and its Voronoi diagram
+  type: web
+  url: https://commons.wikimedia.org/wiki/File:Delaunay_Voronoi.svg
+  author: [Nü es]
+
+HESVG:
+  url: https://commons.wikimedia.org/wiki/File:Dcel-halfedge-connectivity.svg
+  type: web
+  author: [Accountalive]
+  title: Showing next, prev and twin of a halfedge in a DCEL
