@@ -271,3 +271,45 @@ HESVG:
   type: web
   author: [Accountalive]
   title: Showing next, prev and twin of a halfedge in a DCEL
+
+CGAL:
+  type: web
+  title: "CGAL: Computational Geometry Algorithms Library"
+  author:
+    - "The CGAL Project"
+  version: "5.6"
+  year: 2024
+  url: https://www.cgal.org
+
+FEMOverview:
+  type: article
+  title: 'Finite Element Method: An Overview'
+  author:
+  - Jagota, Vishal
+  - Sethi, Aman Preet Singh
+  - Kumar, Khushmeet
+  date: 2013
+  page-range: 1-8
+  url: https://wjst.wu.ac.th/index.php/wjst/article/view/499
+  parent:
+    type: periodical
+    title: Walailak Journal of Science and Technology (WJST)
+    issue: 1
+    volume: 10
+
+FEMOg:
+  type: article
+  title: Solution of Problems of Elasticity by the Framework Method
+  author: Hrennikoff, A.
+  date: 1941-12
+  page-range: A169-A175
+  url: https://doi.org/10.1115/1.4009129
+  serial-number:
+    doi: 10.1115/1.4009129
+    issn: 0021-8936
+  abstract: Because of mathematical difficulties which make the solution of differential equations of the theory of elasticity impossible in many cases, the author has been impelled to seek some other method of approach than one of pure mathematical analysis. The method outlined in this paper is of this character and may with some qualifications be applied to problems of two-dimensional stress, bending of plates, bending of cylindrical shells, the general case of three-dimensional stress, and a great variety of others. Essentially, the method consists in replacing the continuous material of the elastic body being studied by a framework of bars arranged according to a definite pattern, the elements of which are endowed with elastic properties suitable to the type of problem. This framework is then analyzed, according to the procedure outlined in the paper for various types of elastic problems. Examples of the application of the principles involved are also given.
+  parent:
+    type: periodical
+    title: Journal of Applied Mechanics
+    issue: 4
+    volume: 8

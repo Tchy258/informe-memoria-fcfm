@@ -63,15 +63,14 @@
     memoria: true,
 
     // En caso de ser auspiciado por alguna institución
-    auspicio: none,
+    auspicio: "Fondecyt 1241596",
   
     // El magíster al que se opta, si es tesis
     grado-magister: "COMPUTACIÓN",
 
     comision: (
-      "NOMBRE COMPLETO UNO",
-      "NOMBRE COMPLETO DOS",
-      "NOMBRE COMPLETO TRES",
+      "Éric Tanter",
+      "Mauricio Cerda",
     ),
   ),
 )
