@@ -96,7 +96,21 @@
         first-line-indent: 15pt,
         spacing: 2em, // Espacio entre párrafos
     ) // Formato de párrafos
-    
+    show figure.where(kind: raw): set figure(supplement: [Código])
+    show raw.where(block: true): code => {
+    grid(
+        columns: (auto, auto),
+        column-gutter: 1em,
+        row-gutter: par.leading,
+        align: (right, raw.align),
+        ..for line in code.lines {
+        (
+            text(fill: gray)[#line.number],
+            line.body,
+        )
+        },
+    )
+    }
     set cite(style: "council-of-science-editors") // esto deja las citas contiguas como [1, 2] o [1-3]
     pagebreak(weak: true) // Salto de página
     counter(page).update(1) // Reestablecer el contador de páginas

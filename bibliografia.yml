@@ -313,3 +313,34 @@ FEMOg:
     title: Journal of Applied Mechanics
     issue: 4
     volume: 8
+
+OracleJavaInterfaceTutorial:
+  type: web
+  title: What Is an Interface?
+  author: Oracle Inc.
+  date: 2024
+  note: The Java™ Tutorials — Learning the Java Language, Object-Oriented Programming Concepts
+  url: https://docs.oracle.com/javase/tutorial/java/concepts/interface.html
+
+CppReferenceTemplates:
+  type: web
+  title: Templates — C++ language
+  author: cppreference.com contributors
+  url: https://en.cppreference.com/w/cpp/language/templates.html
+  date: 2025
+  note: cppreference.com — C++ language documentation
+
+gamma1994strategy:
+  type: chapter
+  title: Strategy
+  author:
+  - Gamma, Erich
+  - Helm, Richard
+  - Johnson, Ralph
+  - Vlissides, John
+  date: 1994
+  page-range: 315-322
+  parent:
+    type: anthology
+    title: 'Design Patterns: Elements of Reusable Object-Oriented Software'
+    publisher: Addison-Wesley
