@@ -129,7 +129,7 @@ Un diagrama de Voronoi es una partición de un dominio $P$ en regiones o 'celdas
 
 El diagrama de Voronoi es otro caso particular de malla poligonal.
 
-=== Malla poligonal
+=== Malla poligonal <malladef>
 Una malla poligonal, o malla geométrica, es una forma de describir un objeto o un espacio como una colección de polígonos adyacentes. Estos polígonos se denotan según sus vértices y aristas que unen dichos vértices para formarlos (sus caras). Dichos polígonos pueden existir en un espacio en dos, tres o incluso más dimensiones dependiendo del caso de uso. Este trabajo de memoria solo se centrará en aplicaciones a mallas geométricas en 2D. 
 
 Una malla se puede representar de varias formas, siendo la más común una basada en caras, en que se guarda la información de los vértices que componen la malla y qué vértices forman cada cara, siendo las aristas guardadas de manera implícita en las caras. En la solución propuesta se hace uso de esta representación al recibir una malla como entrada contenida en uno o más archivos de texto, ya sea en formato `.node`, `.ele` y opcionalmente `.neigh` que guardan vértices, aristas (en forma de caras) e información de adyacencia respectivamente o en formato `.off` que guarda información de vértices y aristas, pero no de adyacencia. También se escribirán las mallas resultantes en formato `.off` o en el formato `.ale`, el cual puede convertirse al formato binario `.mat` utilizado principalmente por MATLAB u otro software científico para usar la malla en una solución numérica de una ecuación diferencial en derivadas parciales.
@@ -160,7 +160,7 @@ Otro uso de las mallas poligonales es en el cálculo de una solución numérica 
 === _Finite Element Method_ (FEM) y _Virtual Element Method_ (VEM)
 Como fue mencionado anteriormente, el VEM@VEM es un método numérico para resolver ecuaciones diferenciales haciendo uso de las mallas poligonales arbitrarias, pero antes de que existiese el VEM, existía el FEM@FEMOverview@FEMOg, estos métodos numéricos tienen el mismo objetivo, pero se diferencian en la flexibilidad permitida de los datos de entrada, siendo el FEM mucho más rígido respecto a la malla de entrada, en particular, el FEM no permite polígonos no convexos y solo acepta polígonos de un solo tipo particular como entrada, ya sean triángulos, cuadriláteros, u otros, pero siendo todos del mismo tipo, lo que no lo hace viable para algoritmos como el desarrollado en este tema de memoria.
 
-=== Polígono simple y no simple
+=== Polígono simple y no simple <simpledef>
 Un polígono se define como simple, si sus aristas forman un bucle cerrado, es decir, sin aristas internas. Por otro lado, un polígono no simple, es aquel que posee aristas internas (ver @nosimple). Estos últimos son problemáticos en prácticamente cualquier caso de uso, ya que no permiten 'recorrer' los polígonos de la malla de manera regular y se tratan de eliminar de la malla de alguna manera en caso de que estén presentes.
 
 #figure(
@@ -238,7 +238,9 @@ Para el ejemplo de la @PSLGGuitarra, la malla resultante generada por Triangle e
     caption: [Malla poligonal final resultante de aplicar el algoritmo Triangle @TrianglePaper]
 ) <TriangleComplete>
 
-Esta última parte del algoritmo es de particular importancia, ya que el criterio del circuncírculo es análogo al de la cavidad, sin embargo, en este caso solo se utiliza para refinar la malla y re triangular las cavidades. Este trabajo de memoria busca explorar más a fondo este proceso y utilizar las cavidades para generar mallas de polígonos generales.
+Esta última parte del algoritmo es de particular importancia, ya que el criterio del circuncírculo es análogo al de la cavidad, sin embargo, en este caso solo se utiliza para refinar la malla y re triangular las cavidades. Este trabajo de memoria busca explorar más a fondo este proceso y utilizar las cavidades para generar mallas de polígonos generales. 
+
+El algoritmo Triangle posee una implementación escrita en lenguaje C@TriangleCodigo de la cual se adaptó código.
 
 === Detri2
 El software Detri2@Detri2 permite generar triangulaciones a partir de nubes de vértices aleatorios, y utilizar distintos criterios para refinar la triangulación a través de una interfaz gráfica que permite una gran variedad de opciones y resulta muy útil para generar o verificar geometrías. Además de la triangulación de un conjunto de puntos, Detri2 también permite visualizar su diagrama de Voronoi.
@@ -258,7 +260,7 @@ En la @VoronoiExample mostrada anteriormente y la @Detri2Example se puede ver un
 
 
 === Polylla <AlgoPolylla>
-Por otro lado, el algoritmo Polylla, busca generar una malla poligonal a partir de una triangulación de Delaunay, usando lo que denomina como _Terminal-edge regions_ o regiones de arista terminal, definidas según el _longest edge propagation path_ (camino de propagación de arista más larga o _Lepp_ @Lepp) de los triángulos, las cuales utiliza para generar una partición de la triangulación que se asemeja a un diagrama de Voronoi @Voronoi.
+Por otro lado, el algoritmo Polylla, busca generar una malla poligonal a partir de una triangulación arbitraria, usando lo que denomina como _Terminal-edge regions_ o regiones de arista terminal, definidas según el _longest edge propagation path_ (camino de propagación de arista más larga o _Lepp_ @Lepp) de los triángulos, las cuales utiliza para generar una partición de la triangulación que se asemeja a un diagrama de Voronoi @Voronoi.
 
 El _Lepp_ o camino de propagación de arista más larga de un triángulo se define de la siguiente manera: Por cada triángulo $t_i$ en cualquier triangulación $Omega$,
 el $L e p p(t_i)$ es la lista ordenada de todos los triángulos $t_0,t_1,t_2, ..., t_(l-1), t_l$ con $l in NN$,
@@ -332,7 +334,7 @@ Sin embargo, para este trabajo no se hace uso de CGAL debido a su complejidad y 
 */
 ]
 
-#capitulo(title: "Problema")[
+#capitulo(title: "Problema", label: label("cap3"))[
 Como se mencionó en la introducción, este trabajo de memoria busca implementar de manera eficiente un algoritmo que permita refinar mallas poligonales basándose en el concepto de cavidad (véase @DefCavidad, @ejemplo_delaunay, @ejemplo_seleccion_triangulos y @ejemplo_poligono_cavidad), basándose en las estructuras de datos presentes en Polylla@PolyllaPaper, comparando las mallas resultantes de los dos algoritmos en términos de calidad, uso de memoria, aptitud para el VEM@VEM, entre otros. Adicionalmente, también se busca reescribir la implementación actual de Polylla basada en _half-edges_@RepoPolylla (_Polylla-Mesh-DCEL_) para integrarla en un programa modular que pueda procesar triangulaciones de Delaunay, ya sea haciendo uso de Polylla, del algoritmo basado en cavidades o algún otro que se añada en el futuro. 
 
 A continuación se describirá a modo general como funciona esta implementación particular de Polylla y por qué existe la necesidad de reescribirla para integrarla en un programa más general.
@@ -495,14 +497,81 @@ Esta implementación de Polylla fue hecha considerando la mayor eficiencia posib
 
 == Diseño propuesto
 
-Para reescribir Polylla-Mesh-DCEL brindándole más modularidad se propone un diseño basado en clases altamente genéricas utilizando tipos _template_ con sus _concepts_ asociados (vease @TemplateConceptDef).
+Para reescribir Polylla-Mesh-DCEL brindándole más modularidad se propone un diseño basado en clases altamente genéricas utilizando tipos _template_ con sus _concepts_ asociados (vease @TemplateConceptDef), disponible en #link("https://github.com/Tchy258/Delaunay-cavity")
 
-La clase principal de este diseño es la clase 'PolygonalMesh', la cual hace uso extensivo del patrón de diseño _Strategy_@gamma1994strategy delegando las funciones de leer y escribir archivos geométricos, contener una malla y refinar la malla a clases dedicadas, siendo el tipo de la malla un tipo _template_ restringindo por un _concept_ utilizado como parámetro por todas ellas. Esta clase se muestra en la @UMLPMesh
+La clase principal de este diseño es la clase 'PolygonalMesh', la cual hace uso extensivo del patrón de diseño _Strategy_@gamma1994strategy delegando las funciones de leer y escribir archivos geométricos, contener una malla y refinar la malla a clases dedicadas, siendo el tipo de la malla un tipo _template_ restringindo por un _concept_ utilizado como parámetro por todas ellas. Esta clase se muestra en la @UMLPMesh. La iconografía de esta figura y otras representaciones UML está disponible en el @PUMLSyn, mientras que el diagrama completo está disponible en el @Diag.
 
 #figure(
     caption: [Representación UML de la clase `PolygonalMesh`],
     image("imagenes/polygonalMeshUML.png")
 ) <UMLPMesh>
+
+De manera similar a como la clase `Polylla` mantenía dos punteros a objetos `Triangulation`, la clase `PolygonalMesh` mantiene punteros a variables de tipo `Mesh`, el cual es un parámetro _template_ de la clase, restringido por el _concept_ `MeshData`. Esto desacopla el detalle de qué tipo de malla específica se desea utilizar sin el costo adicional que involucra tener una clase virtual de C++@driesen1996direct independientemente de las optimizaciones que el compilador pueda hacer al respecto@padlewski2020vptr.
+
+El _concept_ `MeshData` a su vez está compuesto de 8 otros _concepts_ específicos, cada uno definiendo distintas características que un tipo genérico debe respetar para ser considerado viable como una malla:
+- `MeshAccessors`: Define _getters_ que toda malla debiese tener, incluyendo _getters_ para vértices, aristas, polígonos y datos relacionados como la cantidad de cada uno o la cantidad de aristas de un polígono.
+- `MeshEdges` y `MeshVertices`: Declaran que toda malla debe definir un _alias_ con la instrucción _using_@cppreference_using para sus vértices y aristas. Esto asegura correctitud al momento de llamar métodos de una malla que operan o retornan con vértices o aristas de la misma, puesto que gracias al alias, en tiempo de compilación es inequívoco con qué tipo de vértice o arista se está trabajando.
+- `MeshIndices`: Declaran que toda malla debe definir un _alias_ con la instrucción _using_@cppreference_using para 'tipos índice', esto con la finalidad de diferenciar cuándo se está trabajando con un índice que representa un vértice, una arista, una cara o 'un índice de salida', donde este último debe ser alguno de los anteriores. Este atributo es un detalle de la implementación concreta, ya que una 'salida' es un índice de cara para una representación basada en caras, pero un índice de arista para una representación basada en _half-edges_. En la práctica, todos estos índices pueden perfectamente ser `int` o cualquier otro tipo de entero que se pueda usar para indexar (haciendo uso de un _concept_ auxiliar llamado `PrimitiveIntegral` que se asegura de ello), la ventaja, es que al momento de escribir o usar código que opere o retorne dichos índices, es evidente a que se refieren, porque en vez de estar declarados como simplemente `int`, están declarados como el tipo de índice específico que la malla declara dentro de sí para el método, como `VertexIndex`, `EdgeIndex`, `FaceIndex` u `OutputIndex`. Adicionalmente, este _concept_ también declara la existencia de un miembro estático constante llamado `invalidIndexValue`, este símbolo es de particular utilidad para invalidar índices de salida de forma clara y explícita en vez de usar un valor literal como `-1` en múltiples lugares para ese propósito.
+- `MeshSetters`: Declara la existencia de _setters_ generales para mutar el estado o características de la malla, incluyendo setters para el número efectivo de vértices, polígonos y aristas, junto con métodos para unir dos polígonos, deshacer una unión y un tipo interno declarado por la malla con un 'respaldo de conectividad' (`ConnectivityBackupT`) para deshacer dicha unión de ser necesario, por ejemplo, si la unión entre dos polígonos no da un resultado deseado.
+- `MeshTopology`: Declara métodos genéricos para consultar información topológica sobre la malla, por ejemplo: quienes son los vecinos de un polígono dado, cuáles son los vértices o aristas de un triángulo dado (asumiendo que sigue siendo triangular), si es que una arista es parte del borde de la malla, la arista o aristas compartidas entre 2 triángulos o 2 polígonos respectivamente, el largo al cuadrado de una arista, si es un polígono es convexo y por último si un polígono es simple (@simpledef).
+- `MeshConstructible`: Declara constructores que una malla debe tener junto con sus argumentos, en particular, una malla debe ser capaz de recibir un `vector` de vértices, un `vector` de aristas y un `vector` de índices de cara como mínimo para ser válida. También debe tener un constructor de copia. Estos vértices, aristas e índices de cara son un detalle de la malla misma definidos según los _concepts_ anteriores. Este constructor se define con estos argumentos con la idea de que los datos de la malla vienen en una representación basada en caras, permitiendo que la implementación de malla particular reorganice estos datos como estime conveniente.
+- `MeshMemory`: _Concept_ de utilidad que declara métodos para calcular el uso de memoria de una malla, usado para medir rendimiento.
+
+
+Como se puede notar, estos _concepts_ se basan muy fuertemente en la definición de malla que brindaba la clase `Triangulation`, pero delegan la tarea de leer los vértices hacia otra clase, eliminando la restricción de solo poder leer mallas no aleatorias desde archivos. La clase que se adhiere a estos _concepts_ y es un reemplazo directo a `Triangulation` es la clase `HalfEdgeMesh` de la @HEMeshUML.
+
+#figure(
+    caption: [Representación UML de la clase `HalfEdgeMesh`],
+    image("imagenes/hemeshuml.png")
+) <HEMeshUML>
+
+Esta clase implementa la estructura _half-edge_ haciendo uso de los _structs_ `HEVertex` y `HalfEdge` de la @HEdgesUML, adaptados de Polylla-Mesh-DCEL. Notar que en C++, la única diferencia entre _struct_ y _class_ es que la visibilidad por defecto es distinta, siendo `public` en el primero y `private` en el segundo, pero en realidad ambos son clases capaces de definir atributos y métodos.
+
+#figure(
+    caption: [Representación UML de las clases `Vertex`, `HEVertex` y `HalfEdge`],
+    image("imagenes/umlhedges.png")
+) <HEdgesUML>
+
+Además de los atributos que poseían los _struct_ `vertex` y `halfEdge` de Polylla-Mesh-DCEL, se hace una distinción entre un vértice genérico (`Vertex`) y un vértice especializado para _half-edges_ (`HEVertex`), puesto que en la mayoría de los casos es suficiente operar con un vértice tratandolo como un `Vertex` con las operaciones que este define, son de particular utilidad sus métodos públicos:
+- `operator*,+,-,==`: Azúcar sintáctica que permite escribir en código operaciones como $v_1 + v_2$ que suma cada coordenada por separado, como se esperaría al operar con puntos en un plano en dos dimensiones.
+- `cross2d`: Dados 3 vértices $v_1$, $v_2$, y $v_3$, `v1.cross2d(v2,v3)` retorna el valor de la coordenada $z$ al hacer un producto cruz entre los vectores formados por $v_2 - v_1$ y $v_3 - v_1$. Esta operación permite determinar la orientación en la que se encuentran los vértices, horario o antihorario, según su signo, donde un valor positivo representa una orientación en sentido antihorario, y un valor negativo, una orientación en sentido horario. Este valor también equivale a la mitad del área de un triángulo formado por estos 3 vértices, lo cual se puede extender para calcular el área de cualquier polígono arbitrario.
+- `dot`: Operación de producto punto entre 2 vectores, útil al calcular el largo de una arista entre vértices $v_1$ y $v_2$, ya que el producto punto de un vector consigo mismo equivale al cuadrado de su norma euclidiana.
+- `findCircumcenter` e `inCircle`: Adaptando la lógica de Triangle@TriangleCodigo, estos métodos permiten encontrar el circuncírculo de un triángulo y determinar si un punto está $P$ está en el interior del círculo descrito por los puntos $A$, $B$ y $C$ usando un método basado en determinantes@Circumcircle. Estos métodos son cruciales para la formación de cavidades.
+
+Continuando con otros miembros de la clase `PolygonalMesh` de la @UMLPMesh, se tienen variables con clase `std::unique_ptr<MeshReader>` y `std::unique_ptr<MeshWriter>`, estos objetos son los llamados _smart pointers_@stroustrup2013cpp de C++, los cuales, a diferencia de punteros estándar, saben como manejar su memoria en el _heap_, con un costo leve de rendimiento. Para estos dos miembros se prefiere el uso de _smart pointers_ porque, como mucho, se necesitan una sola vez cada uno para leer y escribir la malla a archivos, siendo despreciable el costo de rendimiento asociado comparado a la función que estos objetos realizan (entrada y salida de archivos). Los objetos de tipo `Mesh` en cambio, son usados múltiples veces a lo largo de distintas de clases, por lo que convertirlos en _smart pointers_ resultaría en una disminución considerable de rendimiento. 
+//Los objetos `Mesh` en realidad no necesitaban ser punteros y podrían haber sido valores pasados por referencia a lo largo del programa
+
+`MeshReader` y `MeshWriter`, son clases virtuales (o abstractas) que definen la interfaz común que una clase que lee y escribe de mallas debe definir respectivamente. Estos miembros de `PolygonalMesh` deben ser virtuales y no _templates_, ya que le permiten polimorfismo de clases en tiempo de ejecución (recordar que los tipos _template_ son fijos una vez declarados), otorgándole la capacidad de leer y escribir mallas en distintos formatos de archivo en una misma ejecución del programa si así se quisiera. Estas clases se pueden ver en la @UMLReader y la @UMLWriter.
+
+#figure(
+    caption: [Representación UML de la clase abstracta `MeshReader`],
+    image("imagenes/mesh_reader_uml.png")
+) <UMLReader>
+
+#figure(
+    caption: [Representación UML de la clase abstracta `MeshWriter`],
+    image("imagenes/mesh_writer_uml.png")
+) <UMLWriter>
+
+A diferencia de la clase `Triangulation` que recibe objetos de tipo `string` representando nombres de archivo, las clases que extienden `MeshReader` y `MeshWriter` utilizan un `vector` de objetos tipo `filesystem::path` de manera explícita, dando entender inmediatamente que estos parámetros hacen referencia a rutas en el sistema de archivos y no a cualquier `string`. Además, el hecho de que el argumento sea un `vector` le da más flexibilidad para que formatos que lean o escriban múltiples archivos tengan una interfaz uniforme. El método `isWhitespace` de `MeshReader` era una función libre declarada en el archivo `triangulation.hpp`@RepoPolylla, pero que no era parte de `Triangulation`, este método es usado para leer mallas correctamente.
+
+La clase `MeshReader` tiene 2 implementaciones concretas: `NodeEleReader` y `OffReader` que leen los formatos mencionados en la @malladef, siendo estos `.node`, `.ele` y `.neigh` para el primero y `.off` para el segundo. Estas clases se pueden ver en la @UmlReaders
+
+#figure(
+    image("imagenes/uml_readers.png"),
+    caption: [Representación UML de las clases `NodeEleReader` y `OffReader`]
+) <UmlReaders>
+
+La clase `MeshWriter` también tiene 2 implementaciones concretas: `OffWriter` y `AleWriter`, que escriben en formato `.off` y `.ale` respectivamente. Su representación UML se puede ver en la @UmlWriters
+
+#figure(
+    grid(
+        columns: 1,
+        [#image("imagenes/uml_off_writer.png")],
+        [#image("imagenes/uml_ale_writer.png")]
+    ),
+    caption: [Representación UML de las clases `OffWriter` y `AleWriter`]
+) <UmlWriters>
 
     /*#lorem(100)
     
@@ -518,6 +587,439 @@ La clase principal de este diseño es la clase 'PolygonalMesh', la cual hace uso
 ]
 
 #capitulo(title: "Solución")[
+== Algoritmo de refinado basado en cavidades
+El algoritmo de refinado basado en cavidades consta de 5 etapas: Selección y ordenamiento de triángulos, cálculo de circuncentro, computo de cavidades, inserción de cavidades y un paso opcional de postprocesado.
+=== Selección y ordenamiento de triángulos según criterios
+Además de la malla triangular de input, el algoritmo también necesita comparadores y criterios refinado, los cuales están descritos por los _concepts_ `TriangleComparator` y `RefinementCriterion`, es según estos comparadores y criterios el cómo se decide el orden en que las cavidades serán calculadas y posteriormente insertadas. 
+
+Durante el semestre se desarrollaron los siguientes comparadores de triángulos, los cuales pueden ordenar de forma ascendente o descendente si es que aplica:
+- `AngleComparator`: Ordena según ángulo mínimo o máximo.
+- `AreaComparator`: Ordena según área o doble del área.
+- `EdgeLengthComparator`: Ordena según largo mínimo o máximo de las aristas.
+- `NullComparator`: No cambia el orden de los triángulos y este se mantiene según como vienen en la malla.
+- `RandomComparator`: Revuelve los triángulos con un generador psuedoaleatorio _mersenne twister_@MatsumotoNishimura1998 con un objeto del tipo `std::mt19937` de C++. La semilla es configurable por el usuario.
+
+También se desarrollaron los siguientes criterios de refinado que priorizan triángulos que cumplen con alguna característica deseada o indeseada, para que sean los primeros en considerarse como parte de una cavidad:
+- `MinAngleCriterion`: Prioriza triángulos donde el coseno cuadrado del ángulo mínimo esté por debajo de un umbral. Se prefiere usar coseno cuadrado por su eficiencia, de la misma forma que se hace en el código de Triangle@TriangleCodigo. Su correctitud está asegurada mientras se trabaje con ángulos agudos.
+- `MinAngleCriterionRobust`: Similar al anterior pero calcula los ángulos reales mediante la función arco coseno, computacionalmente caro.
+- `MinAreaCriterion`: Prioriza triángulos donde el área esté por debajo de un umbral.
+- `MinArea2Criterion`: Similar al anterior, pero ahorra una operación al utilizar el doble del área, resultado directo de un producto cruz en 2 dimensiones.
+- `NullRefinementCriterion`: No prioriza ningún triángulo y permite al comparador ordenar la totalidad de ellos.
+
+Inicialmente se planteaba la capacidad de componer estos criterios de refinado con pequeños funtores simulando algebra booleana para tener criterios arbitrariamente complejos, los cuales existen, pero dada la cantidad infinita de formas en que estos pueden ser compuestos, no fueron utilizados durante pruebas:
+- `NotCriterion`: Invierte un criterio, es decir, prioriza aquellos que no son priorizados por un criterio particular.
+- `AndCriteria`: Dados dos criterios (incluyendose a si mismo como 'un criterio'), solo prioriza un triángulo si este es priorizado por ambos criterios. Cumple la función de un _y_ lógico.
+- `OrCriteria`: Similar al anterior, pero le basta con que sea priorizado por un critero o ambos. Cumple la función de un _o_ lógico.
+
+
+Esta parte del algoritmo sigue los pasos del siguiente pseudocódigo:
+#table(columns: 100%,)[Etapa 1: Selección de triángulos][Entrada: Malla inicial $M$, Comparador $O$, Criterio de refinado $R$][Salida: Conjunto de triángulos ordenados antes del cómputo de cavidades]
+#figure(
+    caption: [Algoritmo de selección de triangulos],
+    [#box(
+        fill: rgb("#d3d3d3"),
+        inset: 8pt,
+        radius: 4pt,
+```
+L ← Lista de triangulos de M
+if R y O no son nulos then
+    L ← Ordenar L ubicando los triángulos escogidos por R primero
+    P ← Indice del primer triángulo no escogido por R
+    L ← Ordenar L desde P en adelante usando el comparador O
+else if R es criterio nulo y O no then
+    L ← Ordenar L completo usando el comparador o
+else if O es comparador nulo y R no then
+    L ← Ordenar L ubicando los triángulos escogidos por R primero
+end if
+return L
+```
+)
+])
+Notar que en la implementación actual, tanto el comparador como el criterio de refinado preservan el orden relativo de los triángulos, haciendo uso de las funciones de la librería estándar de C++ `std::stable_sort` y `std::stable_partition`.
+
+La implementación de estas funciones varía levemente según el compilador, siendo el algoritmo _merge sort_@libstdcxx-stable_sort@libstdcxx-stable_sort-details@libcxx-stable_sort-source@msvc-stl-stable_sort@cppreference-stable_sort la base común para `std::stable_sort` y alguna variación de _divide and conquer_@libstdcxx-stable_partition@libstdcxx-constexpr-stable_partition-2025@libcxx-stable_partition-source@cppreference-stable_partition para `std::stable_partition`.
+
+También cabe destacar que, dado que tanto el comparador como el criterio de refinado son parámetros _template_, todos los `if` de este paso se resuelven en tiempo en compilación usando la instrucción `if constexpr`@Libroconstexpr  introducida en C++17, la cual, de manera similar a una macro, permite descartar o incluir ramas completas del código máquina presentes en el archivo ejecutable final. Se diferencia de una macro en el hecho de que es capaz de usar características de reflexión intrínsecas del lenguaje (además de revisarse después de haber procesado macros), incluyendo validaciones de _concepts_ para asegurar una correctitud más rigurosa que no compromete la eficiencia del programa final por no necesitar hacer validaciones en tiempo de ejecución.
+
+=== Cálculo del circuncentro
+En este paso se lleva a cabo el cálculo del circuncentro de todos los triángulos de la malla. Esto se hace mediante el siguiente método basado en determinantes@Circumcircle:
+
+Sean $A$, $B$ y $C$ los vértices de un triángulo en orientación CCW, primero, para simplificar cálculos y sin pérdida de generalidad, se aplica una traslación a estos vértices de modo que $A$, $B$ o $C$ quede en el origen, por simplicidad, se asumirá que $A$ se traslada al origen y se definen los siguientes nuevos vértices:
+$ A' = A - A = (0,0) $
+$ B' = B - A $
+$ C' = C - A $
+También se computará un valor $D$ que corresponde al cuádruple del área del triángulo desplazado:
+$ D = 2[(A' times B')_z + (B' times C')_z + (C' times A')_z] $
+$ D = 2 (B' times C')_z $
+$ D = 2(B'_x C'_y - B'_y C'_x) $
+
+Luego las coordenadas del circuncentro desplazado $U'$ serán
+$ U'_x = 1/D [C'_y (B'_x^2 + B'_y^2) - B'_y (C'_x^2 + C'_y^2)] $
+$ U'_y = 1/D [B'_x (C'_x^2 + C'_y^2) - C'_x (B'_x^2 + B'_y^2)] $
+
+Se debe tener precaución al calcular $D$, ya que este podría ser cero, indicando la presencia de un 'caso degenerado', pero estos triángulos también serán eliminados como parte de la cavidad. Esto podría ocurrir por errores de precisión en los datos.
+
+Finalmente, las coordenadas del circuncentro real estarán ubicadas en:
+$ U = U' + A $
+Con esta información, esta etapa del algoritmo se describe de la manera siguiente:
+#table(columns: 100%,)[Etapa 2: Cálculo de circuncentros][Entrada: Malla inicial $M$][Salida: Conjunto de pares $(c,t)$ que representan un circuncentro $c$ con su triángulo $t$]
+#figure(
+    caption: [Algoritmo de computo de circuncentros],
+    [#box(
+        fill: rgb("#d3d3d3"),
+        inset: 8pt,
+        radius: 4pt,
+```
+C ← {∅}
+for cada triángulo tᵢ ∈ M do
+    V₁,V₂,V₃ ← Vértices de tᵢ
+    V₀ ← Vértice auxiliar que representa el orígen (0,0)
+    V₂',V₃' ← Vértices V₂ y V₃ desplazados al origen según V₁
+    D ← Determinante basado en producto cruz del origen con V₂' y V₃'
+    c'← Circuncentro de tᵢ desplazado en V₁
+    c ← Circuncentro de tᵢ
+    C ← C ∪ {{c,tᵢ}}
+end for
+return C
+```
+)
+])
+
+=== Cómputo de cavidades
+
+Para esta etapa del algoritmo, se recorre la malla poligonal usando el algoritmo _Breadth First Search_@moore1959 (o _BFS_) utilizando la malla como un grafo considerando a cada triángulo individual como un nodo de este. El primer triángulo $t_i$ presente en la lista de circuncentros según el orden del paso 1, debe ser parte de la primera cavidad y se debe utilizar como el nodo de partida de un recorrido _BFS_ manteniendo una cola de triángulos a visitar. Esta cola añade triángulos vecinos si su circuncírculo contiene al circuncentro del triángulo inicial, luego por cada vecino que se va quitando de la cola, se hace la misma verificación para sus vecinos, deteniéndose cuando la cola esté vacía.
+
+Al remover un triángulo de la cola, este se marca como parte de la cavidad, posteriormente, se revisa si es un triángulo de borde de la malla, ya que de ser el caso, una de sus aristas debe preservarse en la cavidad. Luego se revisa cada uno de sus vecinos verificando tres condiciones en orden:
++ Si el triángulo vecino ya fue visitado en este recorrido, se procede al vecino siguiente sin hacer nada más.
++ Si no fue visitado, se marca como visitado, luego se verifica si es que la estrategia de unión de polígonos considera a este triángulo vecino como un candidato 'válido' para formar parte de la cavidad. En la implementación actual, un triángulo vecino es un candidato válido si no pertenece a otra cavidad previamente calculada, pero es posible extender esto a futuro para imponer cualquier otra restricción arbitraria.
++ Si el triángulo vecino es un candidato válido, se debe verificar que su circuncírculo contiene el circuncentro de $t_i$, en caso de cumplirse, entonces este triángulo se añade a la cola.
+
+Finalmente, si el triángulo vecino no fue previamente visitado y no es válido o su circuncírculo no contiene al circuncentro del triángulo inicial, significa que la arista compartida entre este triángulo vecino y el triángulo actual es un borde de la cavidad y debe preservarse.
+Estas aristas de borde se guardan por separado, ya que serán las únicas aristas presentes en el output descartando todas las demás.
+
+Una vez que se hace el recorrido completo de un triángulo según el orden del paso 1, se inicia un nuevo recorrido _BFS_ tomando como punto de partida el triángulo siguiente si y solo sí este no forma parte de una cavidad previamente computada, de lo contrario, el recorrido no se realiza desde este triángulo pasando al siguiente hasta haber intentado iniciar un recorrido por todos los triángulos de la malla.
+
+A continuación se presentan estos mismos pasos en forma de pseudocódigo:
+
+
+#table(columns: 100%,)[Paso 3: Cómputo de cavidades][Entrada: Malla inicial $M$, Conjunto de circuncentros $C$][Salida: Conjunto de cavidades $D$ ]
+#set page(flipped: true)
+#figure(
+    caption: [Algoritmo de cómputo de cavidades],
+    grid( columns: (50%, 50%),
+    [
+    #box(
+        fill: rgb("#d3d3d3"),
+        inset: 8pt,
+        radius: 4pt,
+```
+D ← {∅}
+V ← Arreglo de booleanos para marcar triangulos visitados
+I ← Arreglo auxiliar para marcar triángulos que ya forman parte de una cavidad
+
+for cada par (cᵢ,tᵢ) ∈ C do
+  if I[tᵢ] = True then
+    continue
+  end if
+
+  Q ← Cola de triángulos vecinos para BFS
+  d ← Objeto de cavidad vacío
+  Tᵢ ← Triángulos interiores de d
+  Tₒ ← Triángulos de borde de d
+  T ← Triángulos totales de d
+  Eᵣ ← Aristas de borde de d
+  Q.push(tᵢ)
+  V[tᵢ] ← True
+  T ← T ∪ {tᵢ}
+  while not Q.empty() do
+    tₙ ← Q.pop()
+    I[tₙ] ← True
+    N ← Triángulos vecinos de tₙ en M
+    E ← Aristas de tₙ en M
+    b ← False # True si tₙ ∈ Borde de M
+    if cantidadDeVecinos(tₙ) < 3 then
+      for cada arista e ∈ E do
+        if e ∈ borde de M then
+          b ← True si tₙ != tᵢ
+          Eᵣ ← Eᵣ ∪ {e}
+        end if
+      end for
+    end if
+```
+)], [
+    #show raw.where(block: true): code => {
+    grid(
+        columns: (auto, auto),
+        column-gutter: 1em,
+        row-gutter: par.leading,
+        align: (right, raw.align),
+        ..for line in code.lines {
+        (
+            text(fill: gray)[#calc.abs(line.number + 31)],
+            line.body,
+        )
+        },
+    )
+    }
+    #box(
+        fill: rgb("#d3d3d3"),
+        inset: 8pt,
+        radius: 4pt,
+```
+    for cada vecino n ∈ N do
+      if V[n] = True then
+        continue
+      end if 
+      if candidatoValido(n) and cᵢ ∈ circuncirculo de n then
+        V[n] ← True
+        Q.push(n)
+        T ← T ∪ {tᵢ}
+      else if tₙ = tᵢ then
+        for cada arista e ∈ E do
+            if e ∈ tₙ and e ∈ n then
+              Eᵣ ← Eᵣ ∪ {e}
+            end if
+        end for
+      else then
+        b ← True
+        s ← Arista compartida entre tₙ y n
+        Eᵣ ← Eᵣ ∪ {s}
+      end if
+    end for
+
+    if b = True then
+      Tₒ ← Tₒ ∪ {tₙ}
+    else then
+      Tᵢ ← Tᵢ ∪ {tₙ}
+    end if
+  end while
+
+  Ordenar y deduplicar elementos de d
+  Reiniciar V a False
+  D ← D ∪ {d}
+end for
+return D
+```
+)]
+))
+#show raw.where(block: true): code => {
+    grid(
+        columns: (auto, auto),
+        column-gutter: 1em,
+        row-gutter: par.leading,
+        align: (right, raw.align),
+        ..for line in code.lines {
+        (
+            text(fill: gray)[#line.number],
+            line.body,
+        )
+        },
+    )
+    }
+#set page(flipped: false)
+=== Inserción de Cavidades
+Con la información del paso anterior es posible hacer efectiva la mutación de la malla para convertir los conjuntos de triángulos que forman las cavidades en polígonos arbitrarios formados por sus aristas de borde. 
+
+Actualmente, este paso es el único que no fue generalizado para cualquier tipo de malla, ya que el cómo se unen polígonos y que representa a cada uno es un detalle de implementación, en este caso particular, la inserción de cada cavidad se hace asumiendo que la malla usa una representación basada en _half edges_, haciendo uso de la clase auxiliar `MeshHelper`, la cual es un esqueleto que define operaciones que el refinador desea hacer sobre la malla, pero que la malla misma no necesita implementar por separado, ya que se logra mediante combinaciones de operaciones existentes que le incumben al refinador.
+Esta implementación se detalla a continuación:
+
++ Se marca que aristas de la totalidad de la malla pertenecen al borde de la cavidad actual, esto para permitir una búsqueda inmediata al momento de formar el polígono final.
++ Se toma una arista de borde, en este caso la primera que aparezca en el objeto `Cavity` (puede ser cualquiera) y se calcula su arista `next`, luego, utilizando el método `CCWEdgeToVertex` se hace un barrido en sentido antihorario desde esta arista `next` buscando la siguiente arista que si es parte del borde de la cavidad, cuando esta es encontrada, se reconecta con la arista anterior y esta pasa a ser la siguiente arista a reconectar con otra arista de borde. Este proceso sigue hasta volver a la primera arista de borde tomada.
+
+Hecho esto, se actualiza también el conteo de aristas y polígonos que la malla reporta para que estos sean coherentes con la malla de salida, detalle importante al momento de escribir la malla a un archivo.
+
+A continuación se presenta este proceso en forma de pseudocódigo:
+#table(columns: 100%,)[Paso 4: Inserción de cavidades][Entrada: Malla inicial $M$, Conjunto de cavidades $D$][Salida: Malla mutada $M'$ y arreglo de polígonos de salida $P$ ]
+
+#figure(
+    caption: [Algoritmo de inserción de cavidades],
+    [#box(
+        fill: rgb("#d3d3d3"),
+        inset: 8pt,
+        radius: 4pt,
+```
+P ← {∅}
+M' ← Copia de M
+p ← Cantidad de poligonos de M'
+a ← Cantidad de aristas de M'
+for cada cavidad dᵢ ∈ D do
+    B ← Arreglo de booleanos para aristas de borde en la malla
+    for cada arista e ∈ dᵢ.aristasDeBorde do
+        B[e] ← True
+    end for
+    p ← p - size(dᵢ.triangulosTotales) - 1
+    a ← a - size(dᵢ.triangulosTotales) * 3 + size(dᵢ.aristasDeBorde)
+    f ← Primera arista en dᵢ.aristasDeBorde
+    P ← P ∪ {f}
+    h ← f
+    do while h != f
+        c ← M.CCWEdgeToVertex(h)
+        while B[c] = False do
+            c ← M.CCWEdgeToVertex(c)
+        end while
+        M'.setNext(h,c)
+        M'.setPrev(c,h)
+        h ← c
+    end while
+end for
+return M', P
+```
+)
+])
+
+Notar que el arreglo $P$ guarda aristas, ya que en la representación basada en _half edges_, los polígonos se identifican con un solo _half edge_ de su interior. Aquí es cuando cobra particular importancia la distinción de qué es una salida como se menciono en el capítulo anterior, y la claridad que brindan los _concepts_ de C++, ya que a modo general $P$ es un arreglo de `OutputIndex`, no importandole al refinador ni otras clases la malla subyacente a pesar de que el proceso de inserción si lo sea. En este caso `OutputIndex = EdgeIndex`.
+
+=== Postprocesado
+Del mismo modo en que la primera etapa es altamente personalizable según el criterio de refinamiento y comparador escogido, la etapa de postprocesado posee una gran variedad de alternativas y posibilidad de extensión según el resultado deseado. Durante el trabajo de memoria se desarrolló una etapa de postprocesado centrada en eliminar todos los triángulos restantes de la malla (`MergeTrianglesStrategy`), uniéndolos con alguno de sus vecinos según alguna política (`PolygonMergingPolicy`) de fusión de polígonos. Las políticas existentes que unen polígonos con alguno de sus vecinos al momento de escribir el documento son las siguientes:
+- `EdgeLengthBasedMergingPolicy`: Une según la arista compartida con un vecino que tenga el mayor o menor largo según preferencia del usuario.
+- `SizeBasedNeighborMergingPolicy`: Une según la cantidad de lados de los vecinos, escogiendo el vecino con más o menos lados según preferencia del usuario.
+- `MaximizeConvexityMergingPolicy`: Intenta unir con un vecino de manera que el polígono resultante sea convexo, si no lo es, prueba con el vecino siguiente, si ninguna fusión resulta en un polígono convexo, no une los polígonos. Se considera que el polígono resultante es convexo si el signo del producto cruz entre 3 vértices consecutivos en una orientación en particular, ya sea horaria o antihoraria, tiene el mismo signo para todos los tripletes de vértices.
+- `NullPolygonMergingPolicy`: Clase auxiliar para ejecuciones del programa donde no se desea hacer postprocesado.
+
+La etapa de postprocesado hace uso de una estructura de datos _union find_@tarjan1975uf para mantener un registro de quienes son los representantes válidos de los polígonos. Dado que esta etapa también es altamente dependiente de detalles de la malla, esta estructura guarda índices de aristas _half edge_ como representantes. Una vez construida la estructura _union find_, se escoge el polígono a unir mediante la estrategia (`MergingStrategy`) con una política (`PolygonMergingPolicy`) particular.
+
+El procedimiento para fusionar un polígono con uno de sus vecinos en una malla basada en _half edges_ es el siguiente:
++ Se cuenta cuantas aristas tiene el polígono a unir, asegurándose de que efectivamente sean aristas compartidas con un vecino y no bordes de la malla.
++ Se recorren todas las aristas del polígono tratando de mantener el invariante de que ninguna arista compartida de polígono vecino sea la arista representante del vecino, si esta condición no se cumple, entonces se actualiza la arista representante en la estructura _union find_ con otra del mismo polígono recorriendo su borde. Adicionalmente, se reemplaza el índice de salida en el arreglo de salida $P$ de la etapa anterior.
++ Se delega a la política de fusión particular la decisión de elegir a qué vecino se une el polígono, y si es que esta fusión tiene éxito o no.
++ Si la fusión tiene éxito, se invalida el índice del polígono fusionado en $P$, y se actualiza la arista representante de todas las aristas que forman el nuevo polígono fusionado para que apunten a una arista válida en la estructura _union find_.
++ Una vez terminado el proceso, se eliminan los índices invalidados en $P$.
+
+Es importante destacar que el invariante del paso 2 es esencial para mantener coherencia topológica en la malla, puesto que, de no cumplirse, habrá aristas inválidas en la salida que no realizan un bucle completo a lo largo del borde de un polígono si se recorren con `next`.
+
+Esta etapa se puede describir con el siguiente pseudocódigo:
+#pagebreak()
+#table(columns: 100%,)[Paso 5: Postprocesado][Entrada: Malla mutada $M'$, Conjunto de salidas $P$, Estrategia de unión $S$, Política de unión $J$][Salida: Malla final $M'$ y arreglo de polígonos de salida $P$ ]
+
+#figure(
+    caption: [Algoritmo de fusión de polígonos],
+    [#box(
+        fill: rgb("#d3d3d3"),
+        inset: 8pt,
+        radius: 4pt,
+```
+U ← Union-Find de aristas con sus representantes de polígono
+for cada índice de salida pᵢ ∈ P do
+  if S escoge a pᵢ then
+    Eᵢ ← Aristas de vecinos de pᵢ, inicialmente vacío
+    Nᵢ ← Aristas representantes de los vecinos en Eᵢ
+    f ← Arista representante de pᵢ
+    h ← f
+    do while h != f
+      if twin(h) ∉ borde de M' then
+        Eᵢ ← Eᵢ ∪ {{Aristas compartidas por pᵢ y twin(h)}}
+        rᵢ ← Representante del vecino a través de h
+        oᵢ ← Copia de rᵢ
+        if rᵢ = twin(h) then
+          rᵢ ← M'.next(rᵢ) u otra arista
+        end if
+        if rᵢ != oᵢ then
+          Actualizar U con el nuevo representante rᵢ 
+          P.replace(oᵢ, rᵢ)
+        end if
+        Nᵢ ← Nᵢ ∪ {rᵢ}
+      end if
+      h ← M'.next(h)
+    end while
+    rᵤ ← J.fusionar(M', pᵢ, Nᵢ, Eᵢ)
+    if rᵤ es un representante válido then
+      i ← índice inválido de la malla, actualmente -1
+      P.replace(pᵢ, i)
+      Actualizar U con el representante rᵤ para sus aristas
+    end if
+  end if
+end for
+return M', P
+```
+)
+])
+
+
+Al momento de realizar la fusión en la línea 24 se muta nuevamente la malla y es el momento en que se utiliza la clase `ConnectivityBackupT` interna a la malla partícular que permite deshacer una unión de polígonos si la política no la determina apta.
+
+== Reescritura de Polylla
+El algoritmo Polylla se movió a la clase `PolyllaRefiner` la cual extiende a `MeshRefiner` y puede ser usada en `PolygonalMesh` al igual que `DelaunayCavityRefiner`.
+
+La lógica del algoritmo es exactamente la misma, solo se hicieron cambios 'estéticos' como renombrado de métodos, variables y uso de _alias_ en lugar de tipos primitivos cuando se trabaja con índices que representan cosas distintas.
+
+La gran diferencia que tiene esta implementación, es que recibe el tipo de malla como parámetro _template_, desacoplando levemente el refinador de detalles de la malla. Sin embargo, esta separación no puede hacerse por completo, ya que prácticamente todas las operaciones de Polylla dependen de la malla, pero esto queda encapsulado en una tercera clase, la clase `MeshHelper` (distinto _namespace_ que la clase `MeshHelper` del otro refinador), la cual tiene una especialización para _half edges_ con el código original adaptado.
+
+]
+
+#capitulo(title: "Resultados")[
+El código se probó con el compilador _g++_ provisto por el entorno _mingw-64_ y también por el compilador _clang_ provisto por _Visual Studio_, ambos en Windows 11. Los resultados mostrados son aquellos producidos por el código compilado con _g++_ en una máquina con las siguientes características relevantes:
+- CPU: Intel Core i5-10400 @ 2.90GHz
+- RAM: 16 GB DDR4 a 2666 MT/s
+- Almacenamiento: SSD ADATA SU630 500GB
+
+En este capítulo se incluyen los resultados con una configuración de parámetros que produjo buenos valores experimentales:
+- Criterio de refinado: `NullRefinementCriterion`
+- Comparador de triángulos: `EdgeLengthComparator` por arista más pequeña en orden ascendente.
+- Estrategia de unión: `MergeTriangles`
+- Política de unión: `EdgeLengthBasedMergingPolicy` según la arista más larga.
+
+Las mallas utilizadas se generaron utilizando los scripts `10000x10000RandomPoints.py` y `datagenerator.sh` presentes en el repositorio de Polylla-Mesh-DCEL@RepoPolylla, el cual genera vértices en un cuadrado de 10000 por 10000 y luego hace que Triangle@TriangleCodigo genere una triangulación de Delaunay a partir de ellos. Se generaron 5 mallas de cada tamaño con semillas: 139, 68, 70, 14 y 42.
+
+Las tablas siguientes muestran el promedio de estas 5 mallas por cada tamaño para distintas métricas:
+
+// RELLENAR!
+#figure(
+    caption: [Tabla comparativa de cantidad de polígonos],
+    table(
+        columns: (auto, auto, auto, auto),
+        [Cantidad de vertices],[Malla original],[Refinador de cavidades],[Polylla],
+        [10],[10],[10],[10],
+        [$10^2$],[10],[10],[10],
+        [$10^3$],[10],[10],[10],
+        [$10^4$],[10],[10],[10],
+        [$10^5$],[10],[10],[10],
+        [$10^6$],[10],[10],[10],
+    )
+)
+
+#figure(
+    caption: [Tabla comparativa de tiempo de ejecución total],
+    table(
+        columns: (auto, auto, auto, auto),
+        [Cantidad de vertices],[Polylla Original],[Refinador de cavidades],[Polylla nuevo],
+        [10],[10],[10],[10],
+        [$10^2$],[10],[10],[10],
+        [$10^3$],[10],[10],[10],
+        [$10^4$],[10],[10],[10],
+        [$10^5$],[10],[10],[10],
+        [$10^6$],[10],[10],[10],
+    )
+)
+
+#figure(
+    caption: [Tabla comparativa de uso de memoria total],
+    table(
+        columns: (auto, auto, auto, auto),
+        [Cantidad de vertices],[Polylla Original],[Refinador de cavidades],[Polylla nuevo],
+        [10],[10],[10],[10],
+        [$10^2$],[10],[10],[10],
+        [$10^3$],[10],[10],[10],
+        [$10^4$],[10],[10],[10],
+        [$10^5$],[10],[10],[10],
+        [$10^6$],[10],[10],[10],
+    )
+)
+
+#figure(
+    caption: [Tabla comparativa de porcentaje de convexidad],
+    table(
+        columns: (auto, auto, auto, auto),
+        [Cantidad de vertices],[Polylla Original],[Refinador de cavidades],[Polylla nuevo],
+        [10],[10%],[10%],[10%],
+        [$10^2$],[10%],[10%],[10%],
+        [$10^3$],[10%],[10%],[10%],
+        [$10^4$],[10%],[10%],[10%],
+        [$10^5$],[10%],[10%],[10%],
+        [$10^6$],[10%],[10%],[10%],
+    )
+)
+
+//Hablar de uso en VEM
 
 ]
 
@@ -530,6 +1032,35 @@ La clase principal de este diseño es la clase 'PolygonalMesh', la cual hace uso
 
 #show: end-doc
 
+#apendice(title: "PlantUML y Clang-UML", label: label("PUMLSyn"))[
+    El diagrama de clases completo del @Diag mostrado parcialmente a lo largo del @cap3 fue generado utilizando _Clang-UML_, un programa escrito en C++ que permite generar diagramas de proyectos escritos en C++, disponible en:\ 
+    #link("https://github.com/bkryza/clang-uml").
+     
+    La salida de _Clang-UML_, en esta ocasión, es un archivo de texto en _PlantUML_, un lenguaje de marcado para declarar diagramas de clases: \
+    #link("https://plantuml.com/es/")
+
+    El significado de cada uno de los símbolos se puede ver en detalle en el siguiente enlace:\ 
+    #link("https://plantuml.com/es/class-diagram")
+
+    A modo de resumen, los íconos y distintos formatos de texto tienen el siguiente significado:
+    #figure(
+        caption: [Iconografía de PlantUML],
+        table(
+        columns: (33%,33%,33%),
+        align: auto,
+        table.header[*Icono para atributo*][*Icono para método*][*Visbilidad*],
+        [#image("imagenes/private-field.png")], [#image("imagenes/private-field.png")], [`private`],
+        [#image("imagenes/protected-field.png")],[#image("imagenes/protected-method.png")], [`protected`],
+        [#image("imagenes/public-field.png")], [#image("imagenes/public-method.png")], [`public`],
+    )
+    )
+    
+    Los atributos o métodos #underline("subrayados") son estáticos, mientras que los que están escritos en _cursiva_, son abstractos.
+
+]
+
 #apendice(title: "Diagrama completo de clases", label: label("Diag"))[
     En el siguiente enlace se encuentra un diagrama de clases completo de la solución en formato _svg_ para ser visualizado en un computador con el nivel de ampliación que se desee: #link("https://github.com/Tchy258/Delaunay-cavity/blob/main/diagrams/delaunay_cavity.svg")
+
+    Dado su enorme tamaño no es adecuado para mostrarse completo en el informe.
 ]

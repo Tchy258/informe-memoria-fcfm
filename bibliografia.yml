@@ -30,6 +30,15 @@ TrianglePaper:
       name: Springer Berlin Heidelberg
       location: Berlin, Heidelberg
 
+TriangleCodigo:
+  type: web
+  url: https://www.cs.cmu.edu/~quake/triangle.html
+  accessed: 2025-12-04
+  title: 'Triangle: A Two-Dimensional Quality Mesh Generator and Delaunay Triangulator'
+  author: Shewchuk, Jonathan Richard
+  date: 2005-07-28
+  note: 'Version 1.6; accessed: 2025-12-04'
+
 
 ConceptSource:
   type: web
@@ -151,7 +160,7 @@ RepoPolylla:
   type: repository
   title: Polylla-Mesh-DCEL
   author: [S. Salinas, R. Carrasco]
-  url: https://github.com/ssalinasfe/Polylla-Mesh-DCEL/tree/main
+  url: https://github.com/ssalinasfe/Polylla-Mesh-DCEL/
   year: 2022
 
 RepoVEMPolylla:
@@ -253,13 +262,6 @@ ShewchukRobust:
     issue: 3
     volume: 18
 
-
-TriangleCodigo:
-  type: web
-  title: Triangle A Two-Dimensional Quality Mesh Generator and Delaunay Triangulator.
-  url: https://www.cs.cmu.edu/~quake/triangle.html
-  year: 2005
-
 VoronoiSVG:
   title: A Delaunay triangulation and its Voronoi diagram
   type: web
@@ -344,3 +346,161 @@ gamma1994strategy:
     type: anthology
     title: 'Design Patterns: Elements of Reusable Object-Oriented Software'
     publisher: Addison-Wesley
+
+driesen1996direct:
+  type: article
+  title: The Direct Cost of Virtual Function Calls in C++
+  author:
+  - Driesen, Karel
+  - Hölzle, Urs
+  date: 1996
+  page-range: 137-148
+  serial-number:
+    doi: 10.1145/236337.236386
+  parent:
+    type: proceedings
+    title: ACM SIGPLAN Notices
+    publisher: ACM
+    issue: 10
+    volume: 31
+
+padlewski2020vptr:
+  type: article
+  title: Modeling the Invariance of Virtual Pointers in {LLVM}
+  author:
+  - Padlewski, George
+  - Pszeniczny, Michal
+  - Smith, Nick R.
+  date: 2020
+  url: https://arxiv.org/abs/2003.04228
+  parent:
+    type: periodical
+    title: arXiv preprint arXiv:2003.04228
+
+cppreference_using:
+  type: web
+  title: Using-declarations
+  author: CppReference contributors
+  date: 2025
+  url: https://en.cppreference.com/w/cpp/language/using_declaration
+  note: 'Accessed: 2025-12-04'
+
+stroustrup2013cpp:
+  type: book
+  title: The C++ Programming Language
+  author: Stroustrup, B.
+  date: 2013
+  publisher:
+    name: Addison-Wesley
+    location: Boston, MA, USA
+  edition: 4
+
+moore1959:
+  type: article
+  title: The Shortest Path Through a Maze
+  author: Moore, E. F.
+  date: 1959
+  page-range: 285-292
+  parent:
+    type: proceedings
+    title: Proc. International Symposium on the Theory of Switching
+
+MatsumotoNishimura1998:
+  type: article
+  title: 'Mersenne Twister: A 623-Dimensionally Equidistributed Uniform Pseudo-Random Number Generator'
+  author:
+  - Matsumoto, Makoto
+  - Nishimura, Takuji
+  date: 1998
+  page-range: 3-30
+  serial-number:
+    doi: 10.1145/272991.272995
+  parent:
+    type: periodical
+    title: ACM Transactions on Modeling and Computer Simulation
+    issue: 1
+    volume: 8
+
+Libroconstexpr:
+  type: report
+  title: constexpr if
+  author: Niebler, Eric
+  date: 2016-06
+  organization: ISO/IEC JTC1/SC22/WG21
+  issue: P292R2
+  url: http://www.open-std.org/jtc1/sc22/wg21/docs/papers/2016/p0292r2.pdf
+  note: WG21 proposal introducing \\texttt\{if constexpr\}
+
+libstdcxx-stable_sort:
+  type: web
+  title: libstdc++ stable_sort — source code in stl_algo.h
+  url: https://gcc.gnu.org/onlinedocs/libstdc++/latest-doxygen/a00626_source.html
+  note: Adaptive stable merge sort implementation. Accessed 2025-12-06
+
+libstdcxx-stable_sort-details:
+  type: web
+  title: 'SGI STL: stable_sort — original reference implementation'
+  url: https://www.sgi.com/tech/stl/stable_sort.html
+  author:
+  - Stepanov, Alexander
+  - Lee, Meng
+  note: Classic adaptive stable merge sort that libstdc++ is based on; historical but authoritative.
+
+libcxx-stable_sort-source:
+  type: web
+  url: https://codebrowser.dev/llvm/libcxx/include/__algorithm/stable_sort.h.html
+  title: libc++ stable_sort — source code in __algorithm/stable_sort.h
+  note: Top-down merge sort implementation used by Clang/LLVM libc++. Accessed 2025-12-06
+
+msvc-stl-stable_sort:
+  type: web
+  url: https://github.com/microsoft/STL/blob/main/stl/inc/algorithm
+  title: 'MSVC STL: algorithm — stable_sort implementation'
+  author: Corporation, Microsoft
+  note: MSVC implements stable_sort as an adaptive stable merge sort. Accessed 2025-12-06
+
+cppreference-stable_sort:
+  type: web
+  url: https://en.cppreference.com/w/cpp/algorithm/stable_sort
+  title: std::stable_sort — C++ reference
+  note: Documents complexity guarantees and merge-sort-based nature. Accessed 2025-12-06
+
+libstdcxx-stable_partition:
+  type: web
+  title: libstdc++ stable_partition — source code in stl_algo.h
+  note: Accessed 2025-12-06
+  url: https://gcc.gnu.org/onlinedocs/libstdc++/libstdc++-html-USERS-4.0/stl__algo_8h.html
+
+libstdcxx-constexpr-stable_partition-2025:
+  type: web
+  title: 'libstdc++: add constexpr stable_partition (gcc commit r15-8970)'
+  url: https://gcc.gnu.org/pipermail/libstdc++-cvs/2025q1/042783.html
+  author: D'Angelo, Giuseppe
+  date: 2025
+  note: Commit that makes stable_partition constexpr in C++26 — shows implementation strategy
+
+libcxx-stable_partition-source:
+  type: web
+  url: https://codebrowser.dev/llvm/libcxx/include/__algorithm/stable_partition.h.html
+  title: libc++ stable_partition — source code in __algorithm/stable_partition.h
+  note: Accessed 2025-12-06
+
+cppreference-stable_partition:
+  type: web
+  url: https://en.cppreference.com/w/cpp/algorithm/stable_partition
+  title: std::stable_partition — C++ reference
+  note: Accessed 2025-12-06; describes complexity guarantees and notes on buffer fallback
+
+tarjan1975uf:
+  type: article
+  title: Efficiency of a Good But Not Linear Set Union Algorithm
+  author: Tarjan, Robert Endre
+  date: 1975
+  page-range: 215-225
+  serial-number:
+    doi: 10.1145/321879.321884
+  parent:
+    type: periodical
+    title: Journal of the ACM
+    issue: 2
+    volume: 22
