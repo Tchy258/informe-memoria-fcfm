@@ -867,7 +867,20 @@ return M', P
 )
 ])
 
-Notar que el arreglo $P$ guarda aristas, ya que en la representación basada en _half edges_, los polígonos se identifican con un solo _half edge_ de su interior. Aquí es cuando cobra particular importancia la distinción de qué es una salida como se menciono en el capítulo anterior, y la claridad que brindan los _concepts_ de C++, ya que a modo general $P$ es un arreglo de `OutputIndex`, no importandole al refinador ni otras clases la malla subyacente a pesar de que el proceso de inserción si lo sea. En este caso `OutputIndex = EdgeIndex`.
+Notar que el arreglo $P$ guarda aristas, ya que en la representación basada en _half edges_, los polígonos se identifican con un solo _half edge_ de su interior. Aquí es cuando cobra particular importancia la distinción de qué es una salida como se mencionó en el capítulo anterior, y la claridad que brindan los _concepts_ de C++, ya que a modo general $P$ es un arreglo de `OutputIndex`, no importandole al refinador ni otras clases la malla subyacente a pesar de que el proceso de inserción si lo sea. En este caso `OutputIndex = EdgeIndex`.
+
+En la @cavidadsvg se muestran ilustraciones paso por paso del cómputo e inserción de una cavidad, en a) se pueden ver 3 triángulos que forman una malla, luego, en b) se escoge el triángulo en rojo como semilla para iniciar el recorrido _BFS_ y se agregan los vecinos a la cola, en c), se revisa un vecino verificando que su circuncírculo contenga al circuncentro del triángulo rojo, dado que en este ejemplo si lo contiene, su arista compartida se marca para ser eliminada en d). Los pasos e) y f) siguen esta misma lógica con otro vecino, y en caso de que estos triángulos tuviesen otros vecinos, se hace la misma verificación siempre con el circuncentro del mismo triángulo semilla, deteniendo el recorrido.
+
+#figure(
+    [#grid(
+        columns: (30%,30%,30%),
+        [#image("imagenes/step1.svg")a) Malla original],[#image("imagenes/step2.svg")b) Circuncentro del\ triángulo semilla en rojo],[#image("imagenes/step3.svg")c) Circuncírculo del vecino conteniendo al punto rojo],[#image("imagenes/step4.svg")d) Marcado de\ arista compartida],
+        [#image("imagenes/step5.svg")e) Circuncírculo de otro\ vecino conteniendo al\ punto rojo],[#image("imagenes/step6.svg")f) Marcado de arista compartida y fin del recorrido]
+    )
+    #image("imagenes/step7.svg",width: 30%)g) Cavidad final tras reconexión de aristas
+    ],
+    caption: [Pasos de la inserción de una cavidad]
+) <cavidadsvg>
 
 === Postprocesado
 Del mismo modo en que la primera etapa es altamente personalizable según el criterio de refinamiento y comparador escogido, la etapa de postprocesado posee una gran variedad de alternativas y posibilidad de extensión según el resultado deseado. Durante el trabajo de memoria se desarrolló una etapa de postprocesado centrada en eliminar todos los triángulos restantes de la malla (`MergeTrianglesStrategy`), uniéndolos con alguno de sus vecinos según alguna política (`PolygonMergingPolicy`) de fusión de polígonos. Las políticas existentes que unen polígonos con alguno de sus vecinos al momento de escribir el documento son las siguientes:
@@ -935,7 +948,7 @@ return M', P
 ])
 
 
-Al momento de realizar la fusión en la línea 24 se muta nuevamente la malla y es el momento en que se utiliza la clase `ConnectivityBackupT` interna a la malla partícular que permite deshacer una unión de polígonos si la política no la determina apta.
+Al momento de realizar la fusión en la línea 24 se muta nuevamente la malla y es el momento en que se utiliza la clase `ConnectivityBackupT` interna a la malla particular que permite deshacer una unión de polígonos si la política no la determina apta. Por ejemplo, si `MaximizeConvexityMergingPolicy` determina que el polígono final es no convexo, utiliza la información de `ConnectivityBackupT` para reescribir los atributos `next` y `prev` de cada _half edge_ involucrado para que vuelvan a su estado original.
 
 == Reescritura de Polylla
 El algoritmo Polylla se movió a la clase `PolyllaRefiner` la cual extiende a `MeshRefiner` y puede ser usada en `PolygonalMesh` al igual que `DelaunayCavityRefiner`.
@@ -948,7 +961,8 @@ La gran diferencia que tiene esta implementación, es que recibe el tipo de mall
 
 #capitulo(title: "Resultados")[
 El código se probó con el compilador _g++_ provisto por el entorno _mingw-64_ y también por el compilador _clang_ provisto por _Visual Studio_, ambos en Windows 11. Los resultados mostrados son aquellos producidos por el código compilado con _g++_ en una máquina con las siguientes características relevantes:
-- CPU: Intel Core i5-10400 @ 2.90GHz
+- Sistema Operativo: Windows 11 25H2
+- CPU: Intel Core i5-10400 @ 2.90GHz, 6 _Cores_, 12 _Threads_
 - RAM: 16 GB DDR4 a 2666 MT/s
 - Almacenamiento: SSD ADATA SU630 500GB
 
@@ -958,7 +972,7 @@ En este capítulo se incluyen los resultados con una configuración de parámetr
 - Estrategia de unión: `MergeTriangles`
 - Política de unión: `EdgeLengthBasedMergingPolicy` según la arista más larga.
 
-Las mallas utilizadas se generaron utilizando los scripts `10000x10000RandomPoints.py` y `datagenerator.sh` presentes en el repositorio de Polylla-Mesh-DCEL@RepoPolylla, el cual genera vértices en un cuadrado de 10000 por 10000 y luego hace que Triangle@TriangleCodigo genere una triangulación de Delaunay a partir de ellos. Se generaron 5 mallas de cada tamaño con semillas: 139, 68, 70, 14 y 42.
+Las mallas utilizadas se generaron utilizando los scripts `10000x10000RandomPoints.py` y `datagenerator.sh` presentes en el repositorio de Polylla-Mesh-DCEL@RepoPolylla, el cual genera vértices en un cuadrado de 10000 por 10000 y luego hace que Triangle@TriangleCodigo genere una triangulación de Delaunay a partir de ellos. Se generaron 5 mallas de cada tamaño con semillas: 139, 68, 70, 14 y 43. Luego, de forma paralela se ejecuto una instancia del programa con cada semilla para cada número de vértices, considerando que el algoritmo como tal es completamente secuencial y que el procesador de la máquina utilizada posee 6 núcleos, cada ejecución no debería afectar a ninguna otra.
 
 Las tablas siguientes muestran el promedio de estas 5 mallas por cada tamaño para distintas métricas:
 
@@ -968,57 +982,101 @@ Las tablas siguientes muestran el promedio de estas 5 mallas por cada tamaño pa
     table(
         columns: (auto, auto, auto, auto),
         [Cantidad de vertices],[Malla original],[Refinador de cavidades],[Polylla],
-        [10],[10],[10],[10],
-        [$10^2$],[10],[10],[10],
-        [$10^3$],[10],[10],[10],
-        [$10^4$],[10],[10],[10],
-        [$10^5$],[10],[10],[10],
-        [$10^6$],[10],[10],[10],
+        [10],[10],[3,2],[3,6],
+        [$10^2$],[173,2],[51,6],[35,8],
+        [$10^3$],[1920,4],[585,8],[319,4],
+        [$10^4$],[19748],[6020,6],[3228],
+        [$10^5$],[199194,6],[60583,6],[32280,8],
+        [$10^6$],[1997479],[607874,6],[322388,2],
     )
 )
 
 #figure(
-    caption: [Tabla comparativa de tiempo de ejecución total],
+    caption: [Tabla comparativa de tiempo de ejecución total en milisegundos],
     table(
         columns: (auto, auto, auto, auto),
         [Cantidad de vertices],[Polylla Original],[Refinador de cavidades],[Polylla nuevo],
-        [10],[10],[10],[10],
-        [$10^2$],[10],[10],[10],
-        [$10^3$],[10],[10],[10],
-        [$10^4$],[10],[10],[10],
-        [$10^5$],[10],[10],[10],
-        [$10^6$],[10],[10],[10],
+        [10],[0.02226],[0.03668],[10],
+        [$10^2$],[0.08548],[0.27742],[10],
+        [$10^3$],[0.70592],[4.39034],[10],
+        [$10^4$],[6.62932],[82.1314],[10],
+        [$10^5$],[89.7205],[3273.302],[10],
+        [$10^6$],[983.45302],[734807],[10],
     )
 )
 
 #figure(
-    caption: [Tabla comparativa de uso de memoria total],
+    caption: [Tabla comparativa de uso de memoria total en bytes],
     table(
         columns: (auto, auto, auto, auto),
         [Cantidad de vertices],[Polylla Original],[Refinador de cavidades],[Polylla nuevo],
-        [10],[10],[10],[10],
-        [$10^2$],[10],[10],[10],
-        [$10^3$],[10],[10],[10],
-        [$10^4$],[10],[10],[10],
-        [$10^5$],[10],[10],[10],
-        [$10^6$],[10],[10],[10],
+        [10],[2395],[4050],[10],
+        [$10^2$],[30870],[61419],[10],
+        [$10^3$],[325164],[594373],[10],
+        [$10^4$],[3294688],[5634252],[10],
+        [$10^5$],[33061784],[66042541],[10],
+        [$10^6$],[331880341],[610940823],[10],
     )
 )
 
 #figure(
     caption: [Tabla comparativa de porcentaje de convexidad],
     table(
-        columns: (auto, auto, auto, auto),
-        [Cantidad de vertices],[Polylla Original],[Refinador de cavidades],[Polylla nuevo],
-        [10],[10%],[10%],[10%],
-        [$10^2$],[10%],[10%],[10%],
-        [$10^3$],[10%],[10%],[10%],
-        [$10^4$],[10%],[10%],[10%],
-        [$10^5$],[10%],[10%],[10%],
-        [$10^6$],[10%],[10%],[10%],
+        columns: (auto, auto, auto,),
+        [Cantidad de vertices],[Polylla Original],[Refinador de cavidades],
+        [10],[61,1%],[75%],
+        [$10^2$],[41,3%],[70,5%],
+        [$10^3$],[39,69%],[72,8%],
+        [$10^4$],[39,44%],[72,4%],
+        [$10^5$],[39,44%],[72,8%],
+        [$10^6$],[39,42%],[72,8%],
     )
 )
 
+#figure(
+    caption: [Tabla comparativa de ángulo mínimo y máximo en grados],
+    table(
+        columns: (auto, auto, auto,auto, auto),
+        table.cell(stroke: none)[],table.cell(colspan:2)[Ángulos Polylla Original],table.cell(colspan:2)[Ángulos Refinador de cavidades],
+        [Cantidad de vertices],[Mínimo],[Máximo],[Mínimo],[Máximo],[10],[43,68],[206,97],[35,25],[207,96],
+        [$10^2$],[21,11],[278,76],[11,70],[290,46],
+        [$10^3$],[14,69],[290,22],[6,53],[305,70],
+        [$10^4$],[6,16],[303,04],[1,66],[335,42],
+        [$10^5$],[< 0,01],[311,10],[0,30],[340,92],
+        [$10^6$],[< 0,01],[330,59],[0,26],[350,07]
+    )
+)
+
+Estos datos se obtuvieron a partir de múltiples ejecuciones de cada programa con la opción para escribir datos a formato `.json`, junto con el _script_ `count_edges.py` en el repositorio del proyecto disponible en #link("https://github.com/Tchy258/Delaunay-cavity").
+
+A continuación se presentan múltiples gráficos mostrando la distribución promedio de cantidad de polígonos según su cantidad de aristas en las mismas ejecuciones anteriores:
+#pagebreak()
+#set page(flipped: true)
+#figure(
+    [#image("imagenes/concave_convex_10.svg") ],
+    caption: "Distribución promedio de polígonos según cantidad de aristas con 10 vértices"
+)
+#figure(
+    [#image("imagenes/concave_convex_100.svg") ],
+    caption: "Distribución promedio de polígonos según cantidad de aristas con 100 vértices"
+)
+#figure(
+    [#image("imagenes/concave_convex_1000.svg") ],
+    caption: "Distribución promedio de polígonos según cantidad de aristas con 1000 vértices"
+)
+#figure(
+    [#image("imagenes/concave_convex_10000.svg") ],
+    caption: "Distribución promedio de polígonos según cantidad de aristas con 10000 vértices"
+)
+#figure(
+    [#image("imagenes/concave_convex_100000.svg") ],
+    caption: "Distribución promedio de polígonos según cantidad de aristas con 100000 vértices"
+)
+#figure(
+    [#image("imagenes/concave_convex_1000000.svg") ],
+    caption: "Distribución promedio de polígonos según cantidad de aristas con 1000000 de vértices"
+)
+#set page(flipped: false)
 //Hablar de uso en VEM
 
 ]
