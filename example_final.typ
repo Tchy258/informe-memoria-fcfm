@@ -179,11 +179,17 @@ Se escogió este lenguaje por su alto rendimiento y por el hecho de que la imple
 === Tipos _Template_ y _Concept_ (C++) <TemplateConceptDef>
 En C++ es posible declarar una 'plantilla' (o _template_@CppReferenceTemplates) de una clase 'A' otorgándole un parámetro de tipo que en principio puede ser cualquier cosa, generalmente a este tipo genérico se le llama '`T`', y dentro de la clase se puede operar con variables declaradas con un tipo '`T`' sin hacer ninguna verificación preliminar. Una vez que la clase se utiliza efectivamente dentro del código es cuando este tipo genérico `T` se debe declarar explícitamente como algún tipo concreto particular, y es solo entonces cuando el compilador genera el código máquina relevante para que la clase 'A' *donde 'T' es dicho tipo concreto*, exista. Es en este momento en que se verifica que la clase `A<T>` para ese tipo `T` concreto sea válida, es decir, verificar que toda variable de tipo `T` tenga todos los métodos que se solicitan de ella (si es que se utilizó alguno) y si `T` es utilizado dentro de métodos que reciben algo distinto de `T`, que `T` sea _convertible_ a dicho tipo, por ejemplo, si el método pide un tipo `int` y `T` es algún otro tipo numérico convertible a `int`, entonces `A<T>` es válida, pero si `T` es `std::string`, el código no compilará.
 
+También es posible tener una 'especialización' de una clase que tiene un parámetro _template_, esto significa declarar de manera explícita una clase `A` donde su tipo `T` es algún tipo concreto como `float`, en tal caso, la especialización sobreescribe a la clase genérica, descartando cualquier método o miembro que esta tenga a favor de lo que la especialización indique, es decir, si `A<T>` tiene un método `foo`, pero existe una especialización `A<float>`, entonces `A<float>` debe declarar su propia versión del método `foo` y es esa implementación la que se invoca.
+
+El uso de _templates_ no está limitado a clases completas, sino que también es posible declarar métodos específicos dentro de una clase (e inclusive funciones libres fuera de una clase) con parámetros _template_, los cuales pueden ser distintos de los parámetros _template_ de la clase (si es que la clase los posee), y también pueden especializarse cumpliendo una función similar a la sobrecarga de métodos (_method overloading_), en la que se puede tener varias implementaciones del mismo método con distinta cantidad de argumentos o argumentos de distinto tipo.
+
 Si bien los tipos _template_@CppReferenceTemplates proveen una muy alta flexibilidad, también son muy propensos a errores, ya que una clase declarada con un tipo _template_, no es realmente una clase hasta el momento en que es instanciada, y si alguna condición para que la clase sea válida no se cumple, el mensaje de error del compilador suele ser muy largo y engorroso, y a menudo indicando errores en lugares no relacionados como funciones de la biblioteca estándar.
 
-Para remediar esto, C++20 introduce los _concept_\s@ConceptSource@Concepts2, similar a la función que cumple una `interface` en el lenguaje Java@OracleJavaInterfaceTutorial para especificar que una clase debe implementar sus métodos para ser válida, un `concept` permite indicar una serie de requerimientos o restricciones que un tipo _template_ debe cumplir para siquiera ser un candidato a tipo dentro de una clase, y esto no solo está restringido a la implementación de métodos, sino que también se pueden especificar atributos que el tipo o clase `T` debe tener, ya sean estáticos o no. Esto es de especial utilidad para este trabajo debido a que permite definir un _alias_ para otro tipo dentro de `T` cuya existencia está asegurada por el `concept`, añadiendo una capa de abstracción que prescinde de detalles específicos relacionados con tipos concretos que un `T` pueda definir dentro de él, otorgando mayor flexibilidad a que cada `T` opere como desee con sus tipos alias indistintamente de quien sea la clase que utilice a `T` como tipo _template_.
+Para remediar esto, C++20 introduce los _concept_\s@ConceptSource@Concepts2, similar a la función que cumple una `interface` en el lenguaje Java@OracleJavaInterfaceTutorial para especificar que una clase debe implementar sus métodos para ser válida, un _concept_ permite indicar una serie de requerimientos o restricciones que un tipo _template_ debe cumplir para siquiera ser un candidato a tipo dentro de una clase, y esto no solo está restringido a la implementación de métodos, sino que también se pueden especificar atributos que el tipo o clase `T` debe tener, ya sean estáticos o no. Esto es de especial utilidad para este trabajo debido a que permite definir un _alias_ para otro tipo dentro de `T` cuya existencia está asegurada por el _concept_, añadiendo una capa de abstracción que prescinde de detalles específicos relacionados con tipos concretos que un `T` pueda definir dentro de él, otorgando mayor flexibilidad a que cada `T` opere como desee con sus tipos alias indistintamente de quien sea la clase que utilice a `T` como tipo _template_.
 
-Cuando un tipo `T` está restringido por un `concept` y este no se cumple, el mensaje que brinda el compilador es claro, y especifica qué es lo que no se cumple de manera directa, facilitando la tarea de depurar errores relacionados.
+Cuando un tipo `T` está restringido por un _concept_ y este no se cumple, el mensaje que brinda el compilador es claro, y especifica qué es lo que no se cumple de manera directa, facilitando la tarea de depurar errores relacionados.
+
+También es posible hacer uso de la instrucción `requires`@ConceptSource@Concepts2 de los _concept_ al momento de declarar métodos dentro de una clase, otorgando la flexibilidad de, por ejemplo, que un método exista solo si el tipo `T` cumple algún _concept_ específico proveyendo versiones alternativas si no lo cumple, o cuando cumple con un _concept_ distinto. Esto permite un muy alto nivel de eficiencia y abstracción al momento de utilizar los métodos que una clase provee, puesto que sus métodos solo existen cuando la clase instanciada realmente los necesita y con la implementación que corresponda.
 
 == Estado del arte
 
@@ -588,7 +594,7 @@ La clase `MeshWriter` también tiene 2 implementaciones concretas: `OffWriter` y
 
 #capitulo(title: "Solución")[
 == Algoritmo de refinado basado en cavidades
-El algoritmo de refinado basado en cavidades consta de 5 etapas: Selección y ordenamiento de triángulos, cálculo de circuncentro, computo de cavidades, inserción de cavidades y un paso opcional de postprocesado.
+El algoritmo de refinado basado en cavidades consta de 4 etapas: Selección y ordenamiento de triángulos, computo de circuncentro y cavidades, inserción de cavidades y un paso opcional de postprocesado.
 === Selección y ordenamiento de triángulos según criterios
 Además de la malla triangular de input, el algoritmo también necesita comparadores y criterios refinado, los cuales están descritos por los _concepts_ `TriangleComparator` y `RefinementCriterion`, es según estos comparadores y criterios el cómo se decide el orden en que las cavidades serán calculadas y posteriormente insertadas. 
 
@@ -606,10 +612,10 @@ También se desarrollaron los siguientes criterios de refinado que priorizan tri
 - `MinArea2Criterion`: Similar al anterior, pero ahorra una operación al utilizar el doble del área, resultado directo de un producto cruz en 2 dimensiones.
 - `NullRefinementCriterion`: No prioriza ningún triángulo y permite al comparador ordenar la totalidad de ellos.
 
-Inicialmente se planteaba la capacidad de componer estos criterios de refinado con pequeños funtores simulando algebra booleana para tener criterios arbitrariamente complejos, los cuales existen, pero dada la cantidad infinita de formas en que estos pueden ser compuestos, no fueron utilizados durante pruebas:
+Inicialmente, se planteaba la capacidad de componer estos criterios de refinado con pequeños funtores simulando álgebra booleana para tener criterios arbitrariamente complejos, los cuales existen, pero dada la cantidad infinita de formas en que estos pueden ser compuestos, no fueron utilizados durante pruebas:
 - `NotCriterion`: Invierte un criterio, es decir, prioriza aquellos que no son priorizados por un criterio particular.
-- `AndCriteria`: Dados dos criterios (incluyendose a si mismo como 'un criterio'), solo prioriza un triángulo si este es priorizado por ambos criterios. Cumple la función de un _y_ lógico.
-- `OrCriteria`: Similar al anterior, pero le basta con que sea priorizado por un critero o ambos. Cumple la función de un _o_ lógico.
+- `AndCriteria`: Dados dos criterios (incluyendose a sí mismo como 'un criterio'), solo prioriza un triángulo si este es priorizado por ambos criterios. Cumple la función de un _y_ lógico.
+- `OrCriteria`: Similar al anterior, pero le basta con que sea priorizado por un criterio o ambos. Cumple la función de un _o_ lógico.
 
 
 Esta parte del algoritmo sigue los pasos del siguiente pseudocódigo:
@@ -641,8 +647,11 @@ La implementación de estas funciones varía levemente según el compilador, sie
 
 También cabe destacar que, dado que tanto el comparador como el criterio de refinado son parámetros _template_, todos los `if` de este paso se resuelven en tiempo en compilación usando la instrucción `if constexpr`@Libroconstexpr  introducida en C++17, la cual, de manera similar a una macro, permite descartar o incluir ramas completas del código máquina presentes en el archivo ejecutable final. Se diferencia de una macro en el hecho de que es capaz de usar características de reflexión intrínsecas del lenguaje (además de revisarse después de haber procesado macros), incluyendo validaciones de _concepts_ para asegurar una correctitud más rigurosa que no compromete la eficiencia del programa final por no necesitar hacer validaciones en tiempo de ejecución.
 
-=== Cálculo del circuncentro
-En este paso se lleva a cabo el cálculo del circuncentro de todos los triángulos de la malla. Esto se hace mediante el siguiente método basado en determinantes@Circumcircle:
+=== Cómputo de circuncentro y cavidades
+
+Para esta etapa del algoritmo, se recorre la malla poligonal usando el algoritmo _Breadth First Search_@moore1959 (o _BFS_) utilizando la malla como un grafo considerando a cada triángulo individual como un nodo de este. El primer triángulo $t_i$ presente en la lista de triángulos según el orden del paso 1, debe ser parte de la primera cavidad y se debe utilizar como el nodo de partida de un recorrido _BFS_ manteniendo una cola de triángulos a visitar. Esta cola añade triángulos vecinos si su circuncírculo contiene al circuncentro del triángulo inicial, luego por cada vecino que se va quitando de la cola, se hace la misma verificación para sus vecinos, deteniéndose cuando la cola esté vacía.
+
+En este paso se lleva a cabo el cálculo del circuncentro del triángulo semilla actual (el primero en quitarse de la cola). Esto se hace mediante el siguiente método basado en determinantes@Circumcircle:
 
 Sean $A$, $B$ y $C$ los vértices de un triángulo en orientación CCW, primero, para simplificar cálculos y sin pérdida de generalidad, se aplica una traslación a estos vértices de modo que $A$, $B$ o $C$ quede en el origen, por simplicidad, se asumirá que $A$ se traslada al origen y se definen los siguientes nuevos vértices:
 $ A' = A - A = (0,0) $
@@ -662,7 +671,7 @@ Se debe tener precaución al calcular $D$, ya que este podría ser cero, indican
 Finalmente, las coordenadas del circuncentro real estarán ubicadas en:
 $ U = U' + A $
 Con esta información, esta etapa del algoritmo se describe de la manera siguiente:
-#table(columns: 100%,)[Etapa 2: Cálculo de circuncentros][Entrada: Malla inicial $M$][Salida: Conjunto de pares $(c,t)$ que representan un circuncentro $c$ con su triángulo $t$]
+#table(columns: 100%,)[Etapa 2.1: Cálculo de circuncentros][Entrada: Triángulo inicial $t_i$][Salida: Circuncentro de $t_i$]
 #figure(
     caption: [Algoritmo de computo de circuncentros],
     [#box(
@@ -670,27 +679,19 @@ Con esta información, esta etapa del algoritmo se describe de la manera siguien
         inset: 8pt,
         radius: 4pt,
 ```
-C ← {∅}
-for cada triángulo tᵢ ∈ M do
-    V₁,V₂,V₃ ← Vértices de tᵢ
-    V₀ ← Vértice auxiliar que representa el orígen (0,0)
-    V₂',V₃' ← Vértices V₂ y V₃ desplazados al origen según V₁
-    D ← Determinante basado en producto cruz del origen con V₂' y V₃'
-    c'← Circuncentro de tᵢ desplazado en V₁
-    c ← Circuncentro de tᵢ
-    C ← C ∪ {{c,tᵢ}}
-end for
-return C
+V₁,V₂,V₃ ← Vértices de tᵢ
+V₀ ← Vértice auxiliar que representa el orígen (0,0)
+V₂',V₃' ← Vértices V₂ y V₃ desplazados al origen según V₁
+D ← Determinante basado en producto cruz del origen con V₂' y V₃'
+c'← Circuncentro de tᵢ desplazado en V₁
+c ← Circuncentro de tᵢ
+return c
 ```
 )
 ])
 
-=== Cómputo de cavidades
-
-Para esta etapa del algoritmo, se recorre la malla poligonal usando el algoritmo _Breadth First Search_@moore1959 (o _BFS_) utilizando la malla como un grafo considerando a cada triángulo individual como un nodo de este. El primer triángulo $t_i$ presente en la lista de circuncentros según el orden del paso 1, debe ser parte de la primera cavidad y se debe utilizar como el nodo de partida de un recorrido _BFS_ manteniendo una cola de triángulos a visitar. Esta cola añade triángulos vecinos si su circuncírculo contiene al circuncentro del triángulo inicial, luego por cada vecino que se va quitando de la cola, se hace la misma verificación para sus vecinos, deteniéndose cuando la cola esté vacía.
-
 Al remover un triángulo de la cola, este se marca como parte de la cavidad, posteriormente, se revisa si es un triángulo de borde de la malla, ya que de ser el caso, una de sus aristas debe preservarse en la cavidad. Luego se revisa cada uno de sus vecinos verificando tres condiciones en orden:
-+ Si el triángulo vecino ya fue visitado en este recorrido, se procede al vecino siguiente sin hacer nada más.
++ Si el triángulo vecino ya fue visitado en este recorrido, se procede al vecino siguiente en la cola _BFS_ sin hacer nada más.
 + Si no fue visitado, se marca como visitado, luego se verifica si es que la estrategia de unión de polígonos considera a este triángulo vecino como un candidato 'válido' para formar parte de la cavidad. En la implementación actual, un triángulo vecino es un candidato válido si no pertenece a otra cavidad previamente calculada, pero es posible extender esto a futuro para imponer cualquier otra restricción arbitraria.
 + Si el triángulo vecino es un candidato válido, se debe verificar que su circuncírculo contiene el circuncentro de $t_i$, en caso de cumplirse, entonces este triángulo se añade a la cola.
 
@@ -702,7 +703,7 @@ Una vez que se hace el recorrido completo de un triángulo según el orden del p
 A continuación se presentan estos mismos pasos en forma de pseudocódigo:
 
 
-#table(columns: 100%,)[Paso 3: Cómputo de cavidades][Entrada: Malla inicial $M$, Conjunto de circuncentros $C$][Salida: Conjunto de cavidades $D$ ]
+#table(columns: 100%,)[Etapa 2.2: Cómputo de cavidades][Entrada: Malla inicial $M$, Conjunto de circuncentros $C$][Salida: Conjunto de cavidades $D$ ]
 #set page(flipped: true)
 #figure(
     caption: [Algoritmo de cómputo de cavidades],
@@ -957,6 +958,8 @@ La lógica del algoritmo es exactamente la misma, solo se hicieron cambios 'est�
 
 La gran diferencia que tiene esta implementación, es que recibe el tipo de malla como parámetro _template_, desacoplando levemente el refinador de detalles de la malla. Sin embargo, esta separación no puede hacerse por completo, ya que prácticamente todas las operaciones de Polylla dependen de la malla, pero esto queda encapsulado en una tercera clase, la clase `MeshHelper` (distinto _namespace_ que la clase `MeshHelper` del otro refinador), la cual tiene una especialización para _half edges_ con el código original adaptado.
 
+También se extraen algunos miembros de la clase `Polylla` original a otra clase llamada `PolyllaData`, la cual hereda de `MeshRefinerData` para tener mayor facilidad a la hora de rastrear estadísticas y mayor flexibilidad para casos en que distintas mallas necesiten miembros diferentes proveyendo una especialización particular a su parámetro _template_.
+
 ]
 
 #capitulo(title: "Resultados")[
@@ -970,7 +973,7 @@ En este capítulo se incluyen los resultados con una configuración de parámetr
 - Criterio de refinado: `NullRefinementCriterion`
 - Comparador de triángulos: `EdgeLengthComparator` por arista más pequeña en orden ascendente.
 - Estrategia de unión: `MergeTriangles`
-- Política de unión: `EdgeLengthBasedMergingPolicy` según la arista más larga.
+- Política de unión: `SizeBasedMergingPolicy` según el vecino que tenga mayor tamaño (más aristas).
 
 Las mallas utilizadas se generaron utilizando los scripts `10000x10000RandomPoints.py` y `datagenerator.sh` presentes en el repositorio de Polylla-Mesh-DCEL@RepoPolylla, el cual genera vértices en un cuadrado de 10000 por 10000 y luego hace que Triangle@TriangleCodigo genere una triangulación de Delaunay a partir de ellos. Se generaron 5 mallas de cada tamaño con semillas: 139, 68, 70, 14 y 43. Luego, de forma paralela se ejecuto una instancia del programa con cada semilla para cada número de vértices, considerando que el algoritmo como tal es completamente secuencial y que el procesador de la máquina utilizada posee 6 núcleos, cada ejecución no debería afectar a ninguna otra.
 
@@ -980,14 +983,14 @@ Las tablas siguientes muestran el promedio de estas 5 mallas por cada tamaño pa
 #figure(
     caption: [Tabla comparativa de cantidad de polígonos],
     table(
-        columns: (auto, auto, auto, auto),
-        [Cantidad de vertices],[Malla original],[Refinador de cavidades],[Polylla],
-        [10],[10],[3,2],[3,6],
-        [$10^2$],[173,2],[51,6],[35,8],
-        [$10^3$],[1920,4],[585,8],[319,4],
-        [$10^4$],[19748],[6020,6],[3228],
-        [$10^5$],[199194,6],[60583,6],[32280,8],
-        [$10^6$],[1997479],[607874,6],[322388,2],
+        columns: (auto, auto, auto, auto, auto),
+        [Cantidad de vertices],[Malla original],[Refinador de cavidades],[Polylla Original],[Polylla Nuevo],
+        [10],[10],[3,2],[3,6],[3,6],
+        [$10^2$],[173,2],[51,6],[35,8],[35,8],
+        [$10^3$],[1920,4],[585,8],[319,4],[319,4],
+        [$10^4$],[19748],[6020,6],[3228],[3228],
+        [$10^5$],[199194,6],[60583,6],[32280,8],[32280,8],
+        [$10^6$],[1997479],[607874,6],[322388,2],[322388,2]
     )
 )
 
@@ -996,12 +999,12 @@ Las tablas siguientes muestran el promedio de estas 5 mallas por cada tamaño pa
     table(
         columns: (auto, auto, auto, auto),
         [Cantidad de vertices],[Polylla Original],[Refinador de cavidades],[Polylla nuevo],
-        [10],[0.02226],[0.03668],[10],
-        [$10^2$],[0.08548],[0.27742],[10],
-        [$10^3$],[0.70592],[4.39034],[10],
-        [$10^4$],[6.62932],[82.1314],[10],
-        [$10^5$],[89.7205],[3273.302],[10],
-        [$10^6$],[983.45302],[734807],[10],
+        [10],[0,00544],[0,03668],[0,00796],
+        [$10^2$],[0,02498],[0,27742],[0,04854],
+        [$10^3$],[0,17872],[4,39034],[0,4148],
+        [$10^4$],[1,73762],[82,1314],[3,92],
+        [$10^5$],[26,9382],[3273,302],[46,05],
+        [$10^6$],[299,9428],[734807],[480,27],
     )
 )
 
@@ -1010,12 +1013,12 @@ Las tablas siguientes muestran el promedio de estas 5 mallas por cada tamaño pa
     table(
         columns: (auto, auto, auto, auto),
         [Cantidad de vertices],[Polylla Original],[Refinador de cavidades],[Polylla nuevo],
-        [10],[2395],[4050],[10],
-        [$10^2$],[30870],[61419],[10],
-        [$10^3$],[325164],[594373],[10],
-        [$10^4$],[3294688],[5634252],[10],
-        [$10^5$],[33061784],[66042541],[10],
-        [$10^6$],[331880341],[610940823],[10],
+        [10],[2395],[4050],[3059],
+        [$10^2$],[30870],[61419],[44311],
+        [$10^3$],[325164],[594373],[404327],
+        [$10^4$],[3294688],[5634252],[3675624],
+        [$10^5$],[33061784],[66042541],[46253388],
+        [$10^6$],[331880341],[610940823],[413287613],
     )
 )
 
