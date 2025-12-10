@@ -1085,10 +1085,12 @@ A continuación se presentan múltiples gráficos mostrando la distribución pro
 ]
 
 #capitulo(title: "Conclusión")[
-    #lorem(100)
-    #lorem(100)
-    
-    #lorem(100)
+    A partir de los resultados obtenidos es posible concluir que el algoritmo basado en cavidades, si bien no tiene mejor eficiencia en cuanto a tiempo o memoria comparado a Polylla, provee una alternativa viable para generar mallas de polígonos arbitrarios con un muy alto nivel de convexidad que converge al rango entre las 4 y las 10 aristas aproximadamente.
+
+    //(Aquí va la conclusión sobre resultados del vem cuando los pueda correr)
+
+    Dado que este trabajo de memoria fue realizado en un semestre, tiene muchos aspectos a mejorar, en particular, es altamente necesario diseñar una forma general de escribir pruebas (o _tests_) unitarias que se adapten bien a la variedad de configuraciones posibles probando invarientes sólidas que se cumplan transversalmente e idealmente sin tener que repetir tests multiples veces. También es de suma importancia buscar maneras más eficientes de implementar el algoritmo para acercarse más al rendimiento de Polylla sin comprometer la legibilidad o flexibilidad del código. Finalmente, es necesario idear una forma más sencilla de generar los archivos ejecutables, ya que el método actual que depende de un _script_ de python se puede hacer difícil de mantener en el tiempo y además, estos archivos generados tienen nombres demasiado largos, lo cual es un problema para el sistema operativo Windows sin antes habilitar la capacidad de tener rutas de archivo de tamaño superior a 260.
+
 ]
 
 #show: end-doc
