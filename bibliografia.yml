@@ -504,3 +504,94 @@ tarjan1975uf:
     title: Journal of the ACM
     issue: 2
     volume: 22
+
+camaronweb:
+  type: web
+  title: 'Camaron-Web: A mesh visualizer focused on inspecting and evaluating the quality of meshes'
+  author: 
+    - Zamora-Quiroz, Diego
+    - Muñoz, David
+  url: https://github.com/diegozq/camaron-web
+  date: 2025
+  note: 'Accessed: Dec. 10, 2025'
+
+CLI11:
+  type: web
+  url: https://github.com/CLIUtils/CLI11
+  title: 'CLI11: A Command-Line Parser for C++11 and Beyond (v2.6.1)'
+  author: 
+    - Schreiner, Henry
+    - Otros
+  date: 2025
+  note: Consultado el 10 de diciembre de 2025
+
+geeksforgeeks_vector_bool:
+  type: web
+  title: Problem with std::vector<bool> in C++
+  author: GeeksforGeeks
+  date: 2020
+  url: https://www.geeksforgeeks.org/cpp/problem-with-std-vector-bool-in-cpp/
+  note: 'Accessed: 2025-02-15'
+  
+learncpp_vector_bool:
+  type: web
+  title: std::vector<bool>
+  author:
+  - Allain, Alex
+  - LearnCpp
+  date: 2023
+  url: https://www.learncpp.com/cpp-tutorial/stdvector-bool/
+  note: 'Accessed: 2025-02-15'
+
+wg21_n1847:
+  type: report
+  title: 'N1847: vector<bool>: More Problems, Better Solutions'
+  author: Austern, Matthew
+  date: 2005
+  organization: ISO/IEC JTC1/SC22/WG21 — C++ Standards Committee
+  url: https://www.open-std.org/jtc1/sc22/wg21/docs/papers/2005/n1847.pdf
+  note: Technical report
+
+autosar_cpp14_a18_1_2:
+  type: misc
+  title: 'AUTOSAR C++14 Rule A18-1-2: Avoid using std::vector<bool>'
+  author: AUTOSAR Consortium
+  date: 2017
+  note: AUTOSAR C++14 Coding Guidelines
+  url: https://www.mathworks.com/help/bugfinder/ref/autosarc14rulea1812.html
+
+misra_cpp_2023_rule2631:
+  type: web
+  title: 'MISRA C++:2023 Rule 26.3.1: Specialization std::vector<bool> shall not be used'
+  author: MISRA Consortium
+  date: 2023
+  note: MISRA C++:2023 Coding Standard
+  url: https://www.mathworks.com/help/bugfinder/ref/misracpp2023rule26.3.1.html
+
+meyers_effective_stl:
+  type: book
+  title: 'Effective STL: 50 Specific Ways to Improve Your Use of the Standard Template Library'
+  author: Meyers, Scott
+  date: 2001
+  publisher: Addison-Wesley
+  serial-number:
+    isbn: 978-0201749625
+  note: 'See Item 18: Avoid vector<bool>'
+
+josuttis_cpp_standard_library:
+  type: book
+  title: 'The C++ Standard Library: A Tutorial and Reference'
+  author: Josuttis, Nicolai M.
+  date: 2012
+  publisher: Addison-Wesley
+  edition: 2nd
+  serial-number:
+    isbn: 978-0321623218
+  note: Discusses the non-standard behaviour of std::vector<bool>
+
+libstd_unordered_map:
+  type: web
+  title: std::unordered_map Class Template Reference — libstdc++
+  url: https://gcc.gnu.org/onlinedocs/gcc-12.4.0/libstdc++/api/a08628.html
+  date: 2024
+  note: Insertion requires amortized constant time

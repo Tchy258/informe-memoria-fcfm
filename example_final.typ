@@ -517,10 +517,10 @@ De manera similar a como la clase `Polylla` mantenía dos punteros a objetos `Tr
 El _concept_ `MeshData` a su vez está compuesto de 8 otros _concepts_ específicos, cada uno definiendo distintas características que un tipo genérico debe respetar para ser considerado viable como una malla:
 - `MeshAccessors`: Define _getters_ que toda malla debiese tener, incluyendo _getters_ para vértices, aristas, polígonos y datos relacionados como la cantidad de cada uno o la cantidad de aristas de un polígono.
 - `MeshEdges` y `MeshVertices`: Declaran que toda malla debe definir un _alias_ con la instrucción _using_@cppreference_using para sus vértices y aristas. Esto asegura correctitud al momento de llamar métodos de una malla que operan o retornan con vértices o aristas de la misma, puesto que gracias al alias, en tiempo de compilación es inequívoco con qué tipo de vértice o arista se está trabajando.
-- `MeshIndices`: Declaran que toda malla debe definir un _alias_ con la instrucción _using_@cppreference_using para 'tipos índice', esto con la finalidad de diferenciar cuándo se está trabajando con un índice que representa un vértice, una arista, una cara o 'un índice de salida', donde este último debe ser alguno de los anteriores. Este atributo es un detalle de la implementación concreta, ya que una 'salida' es un índice de cara para una representación basada en caras, pero un índice de arista para una representación basada en _half-edges_. En la práctica, todos estos índices pueden perfectamente ser `int` o cualquier otro tipo de entero que se pueda usar para indexar (haciendo uso de un _concept_ auxiliar llamado `PrimitiveIntegral` que se asegura de ello), la ventaja, es que al momento de escribir o usar código que opere o retorne dichos índices, es evidente a que se refieren, porque en vez de estar declarados como simplemente `int`, están declarados como el tipo de índice específico que la malla declara dentro de sí para el método, como `VertexIndex`, `EdgeIndex`, `FaceIndex` u `OutputIndex`. Adicionalmente, este _concept_ también declara la existencia de un miembro estático constante llamado `invalidIndexValue`, este símbolo es de particular utilidad para invalidar índices de salida de forma clara y explícita en vez de usar un valor literal como `-1` en múltiples lugares para ese propósito.
+- `MeshIndices`: Declaran que toda malla debe definir un _alias_ con la instrucción _using_@cppreference_using para 'tipos índice', esto con la finalidad de diferenciar cuándo se está trabajando con un índice que representa un vértice, una arista, una cara o 'un índice de salida', donde este último debe ser alguno de los anteriores. Este atributo es un detalle de la implementación concreta, ya que una 'salida' es un índice de cara para una representación basada en caras, pero un índice de arista para una representación basada en _half-edges_. En la práctica, todos estos índices pueden perfectamente ser `int` (y de hecho lo son) o cualquier otro tipo de entero que se pueda usar para indexar (haciendo uso de un _concept_ auxiliar llamado `PrimitiveIntegral` que se asegura de ello), la ventaja, es que al momento de escribir o usar código que opere o retorne dichos índices, es evidente a qué se refieren, porque en vez de estar declarados como simplemente `int`, están declarados como el tipo de índice específico que la malla declara dentro de sí para el método, como `VertexIndex`, `EdgeIndex`, `FaceIndex` u `OutputIndex`. Adicionalmente, este _concept_ también declara la existencia de un miembro estático constante llamado `invalidIndexValue`, este símbolo es de particular utilidad para invalidar índices de salida de forma clara, explícita y centralizada en un solo lugar en vez de usar un valor literal como `-1` en múltiples lugares para ese propósito.
 - `MeshSetters`: Declara la existencia de _setters_ generales para mutar el estado o características de la malla, incluyendo setters para el número efectivo de vértices, polígonos y aristas, junto con métodos para unir dos polígonos, deshacer una unión y un tipo interno declarado por la malla con un 'respaldo de conectividad' (`ConnectivityBackupT`) para deshacer dicha unión de ser necesario, por ejemplo, si la unión entre dos polígonos no da un resultado deseado.
 - `MeshTopology`: Declara métodos genéricos para consultar información topológica sobre la malla, por ejemplo: quienes son los vecinos de un polígono dado, cuáles son los vértices o aristas de un triángulo dado (asumiendo que sigue siendo triangular), si es que una arista es parte del borde de la malla, la arista o aristas compartidas entre 2 triángulos o 2 polígonos respectivamente, el largo al cuadrado de una arista, si es un polígono es convexo y por último si un polígono es simple (@simpledef).
-- `MeshConstructible`: Declara constructores que una malla debe tener junto con sus argumentos, en particular, una malla debe ser capaz de recibir un `vector` de vértices, un `vector` de aristas y un `vector` de índices de cara como mínimo para ser válida. También debe tener un constructor de copia. Estos vértices, aristas e índices de cara son un detalle de la malla misma definidos según los _concepts_ anteriores. Este constructor se define con estos argumentos con la idea de que los datos de la malla vienen en una representación basada en caras, permitiendo que la implementación de malla particular reorganice estos datos como estime conveniente.
+- `MeshConstructible`: Declara constructores que una malla debe tener junto con sus argumentos, en particular, una malla debe ser capaz de recibir un `vector` de vértices, un `vector` de aristas y un `vector` de índices de cara como mínimo para ser válida. También debe tener un constructor de copia. Estos vértices, aristas e índices de cara son un detalle de la malla misma, definidos según los _concepts_ anteriores. Este constructor se define con estos argumentos con la idea de que los datos de la malla vienen en una representación basada en caras, permitiendo que la implementación de malla particular reorganice estos datos como estime conveniente. A futuro se puede extender el _concept_ para exigir constructores a partir de distintas representaciones.
 - `MeshMemory`: _Concept_ de utilidad que declara métodos para calcular el uso de memoria de una malla, usado para medir rendimiento.
 
 
@@ -538,13 +538,13 @@ Esta clase implementa la estructura _half-edge_ haciendo uso de los _structs_ `H
     image("imagenes/umlhedges.png")
 ) <HEdgesUML>
 
-Además de los atributos que poseían los _struct_ `vertex` y `halfEdge` de Polylla-Mesh-DCEL, se hace una distinción entre un vértice genérico (`Vertex`) y un vértice especializado para _half-edges_ (`HEVertex`), puesto que en la mayoría de los casos es suficiente operar con un vértice tratandolo como un `Vertex` con las operaciones que este define, son de particular utilidad sus métodos públicos:
-- `operator*,+,-,==`: Azúcar sintáctica que permite escribir en código operaciones como $v_1 + v_2$ que suma cada coordenada por separado, como se esperaría al operar con puntos en un plano en dos dimensiones.
+Además de los atributos que poseían los _struct_ `vertex` y `halfEdge` de Polylla-Mesh-DCEL, se hace una distinción entre un vértice genérico (`Vertex`) y un vértice especializado para _half-edges_ (`HEVertex`), puesto que en la mayoría de los casos es suficiente operar con un vértice como si tuviese tipo `Vertex` con las operaciones que este define, son de particular utilidad sus métodos públicos:
+- `operator*,+,-,==`: Azúcar sintáctica que permite escribir en código operaciones como $v_1 + v_2$ que suma cada coordenada por separado, o $v_1 * s$ que multiplica las coordenadas de un punto $v_1$ por un valor escalar $s$, como se esperaría al operar con puntos en un plano en dos dimensiones.
 - `cross2d`: Dados 3 vértices $v_1$, $v_2$, y $v_3$, `v1.cross2d(v2,v3)` retorna el valor de la coordenada $z$ al hacer un producto cruz entre los vectores formados por $v_2 - v_1$ y $v_3 - v_1$. Esta operación permite determinar la orientación en la que se encuentran los vértices, horario o antihorario, según su signo, donde un valor positivo representa una orientación en sentido antihorario, y un valor negativo, una orientación en sentido horario. Este valor también equivale a la mitad del área de un triángulo formado por estos 3 vértices, lo cual se puede extender para calcular el área de cualquier polígono arbitrario.
 - `dot`: Operación de producto punto entre 2 vectores, útil al calcular el largo de una arista entre vértices $v_1$ y $v_2$, ya que el producto punto de un vector consigo mismo equivale al cuadrado de su norma euclidiana.
 - `findCircumcenter` e `inCircle`: Adaptando la lógica de Triangle@TriangleCodigo, estos métodos permiten encontrar el circuncírculo de un triángulo y determinar si un punto está $P$ está en el interior del círculo descrito por los puntos $A$, $B$ y $C$ usando un método basado en determinantes@Circumcircle. Estos métodos son cruciales para la formación de cavidades.
 
-Continuando con otros miembros de la clase `PolygonalMesh` de la @UMLPMesh, se tienen variables con clase `std::unique_ptr<MeshReader>` y `std::unique_ptr<MeshWriter>`, estos objetos son los llamados _smart pointers_@stroustrup2013cpp de C++, los cuales, a diferencia de punteros estándar, saben como manejar su memoria en el _heap_, con un costo leve de rendimiento. Para estos dos miembros se prefiere el uso de _smart pointers_ porque, como mucho, se necesitan una sola vez cada uno para leer y escribir la malla a archivos, siendo despreciable el costo de rendimiento asociado comparado a la función que estos objetos realizan (entrada y salida de archivos). Los objetos de tipo `Mesh` en cambio, son usados múltiples veces a lo largo de distintas de clases, por lo que convertirlos en _smart pointers_ resultaría en una disminución considerable de rendimiento. 
+Continuando con otros miembros de la clase `PolygonalMesh` de la @UMLPMesh, se tienen variables con clase `std::unique_ptr<MeshReader>` y `std::unique_ptr<MeshWriter>`, estos objetos son los llamados _smart pointers_@stroustrup2013cpp de C++, los cuales, a diferencia de punteros estándar, saben como manejar su memoria en el _heap_, con un costo leve de rendimiento. Para estos dos miembros se prefiere el uso de _smart pointers_ porque, como mucho, se necesitan una sola vez cada uno para leer y escribir la malla a archivos, siendo despreciable el costo de rendimiento asociado comparado a la función que estos objetos realizan (entrada y salida de archivos). Los objetos de tipo `Mesh`, en cambio, son usados múltiples veces a lo largo de distintas de clases, por lo que convertirlos en _smart pointers_ resultaría en una disminución considerable de rendimiento. 
 //Los objetos `Mesh` en realidad no necesitaban ser punteros y podrían haber sido valores pasados por referencia a lo largo del programa
 
 `MeshReader` y `MeshWriter`, son clases virtuales (o abstractas) que definen la interfaz común que una clase que lee y escribe de mallas debe definir respectivamente. Estos miembros de `PolygonalMesh` deben ser virtuales y no _templates_, ya que le permiten polimorfismo de clases en tiempo de ejecución (recordar que los tipos _template_ son fijos una vez declarados), otorgándole la capacidad de leer y escribir mallas en distintos formatos de archivo en una misma ejecución del programa si así se quisiera. Estas clases se pueden ver en la @UMLReader y la @UMLWriter.
@@ -578,6 +578,38 @@ La clase `MeshWriter` también tiene 2 implementaciones concretas: `OffWriter` y
     ),
     caption: [Representación UML de las clases `OffWriter` y `AleWriter`]
 ) <UmlWriters>
+
+Siguiendo con los miembros de `PolygonalMesh`, también se declara la clase `MeshRefiner`:
+
+#figure(
+    image("imagenes/uml_refiner.png"),
+    caption: [Representación UML de la clase `MeshRefiner`]
+)
+
+Esta clase abstracta declara los métodos que un refinador de mallas debe implementar, incluyendo aquellos que permiten recolectar estadísticas y obtener el conjunto correcto de índices de salida de la malla, puesto que, por temas de eficiencia de memoria, prácticamente nunca se eliminan elementos de la malla, estos se invalidan en la gran mayoría de los casos al omitirlos o marcarlos con el valor `invalidIndexValue`.
+
+La clase `MeshRefiner` posee dos implementaciones concretas: `PolyllaRefiner` que encapsula la lógica del algoritmo Polylla@RepoPolylla original y `DelaunayCavityRefiner` que representa el refinador basado en cavidades.
+
+La clase `PolyllaRefiner` implementa los métodos declarados en `MeshRefiner` y define el alias `BinaryVector` que corresponde a un `vector` de C++ que almacena valores de tipo `uint8_t` (al igual que la implementación original), es decir, enteros sin signo de 8 bits, que solo guardan valor 0 o 1. Esto se hace por razones de alineamiento de memoria y rendimiento, puesto que utilizar un `vector` de valores tipo `bool`, intenta comprimir la memoria de forma que el acceso y escritura pueden no ser directos y resultar en problemas de compatibilidad con otras funciones de la librería estándar de C++ según múltiples fuentes@geeksforgeeks_vector_bool@learncpp_vector_bool@wg21_n1847@autosar_cpp14_a18_1_2@misra_cpp_2023_rule2631@meyers_effective_stl@josuttis_cpp_standard_library.
+
+Las implementaciones de `MeshRefiner` también tienen una implementación de la clase `MeshRefinerData` (@umlrefdata), la cual provee contenedores dinámicos en forma de _hash maps_ para almacenar estadísticas que se almacenan una sola vez, ya que escribir a un _hash map_ es una operación con complejidad $O(1)$ amortizado@libstd_unordered_map y puede afectar negativamente el rendimiento. Para mitigar esto se hacen 2 cosas: primero, las llaves de estos _hash map_ son valores enteros predefinidos en 3 enumeraciones (_enum_) distintas que representan el grupo de estadística con un valor numérico asociado, aprovechandose de que el _hash_ de un valor `int` puede ser el mismo valor, y segundo, se escribe un 0 de manera temprana en todas las estadísticas que el refinador efectivamente utilice logrando que cada estadística ya tenga una llave existente en el _hash map_ para escrituras futuras. Estos 3 _enum_ mencionados son los siguientes: `MeshStat` con enteros para estadísticas de la malla, como su cantidad de polígonos, cantidad de _barrier edge tips_ reparados en caso de Polylla, entre otros; `TimeStat` con valores de tipo `double` para estadísticas de tiempo y `MemoryStat` con valores de tipo `unsigned long long` para estadísticas de memoria.
+
+#figure(
+    image("imagenes/uml_stats.png"),
+    caption: [Representación UML de enumeraciones para estadísticas]
+)
+
+Dentro de su archivo _header_, cada enumeración también define un arreglo estático y constante de _strings_ con el 'nombre' asociado a la estadística, esto facilita el trabajo de escribir estadísticas a un archivo `json` como lo hacía la implementación original de Polylla, con la ventaja de ser menos propenso a errores en caso de añadir una estadística nueva, puesto que se hará referencia a este arreglo de _strings_ y no se escribirá el _string_ directamente. Estos arreglos están marcados como `constexpr`@Libroconstexpr, por lo que en tiempo de compilación sus valores se reemplazan literalmente en el lugar en que son utilizados. Esta configuración provee una manera altamente genérica de escribir estadísticas con el método `writeStatsToJson` de la clase `PolygonalMesh`, aprovechando la estructura de un _hash map_ como contenedor de tipo llave-valor para hacer una escritura directa de su contenido sin importar cuál sea este, por lo que introducir estadísticas nuevas no requiere modificaciones al método.
+
+#figure(
+    image("imagenes/uml_refiner_data.png"),
+    caption: [Representación UML de la clase `MeshRefinerData`]
+) <umlrefdata>
+
+#figure(
+    image("imagenes/uml_polylla_data.png"),
+    caption: [Representación UML de la clase `PolyllaData`]
+) <umlpolylladata>
 
     /*#lorem(100)
     
@@ -975,7 +1007,36 @@ En este capítulo se incluyen los resultados con una configuración de parámetr
 - Estrategia de unión: `MergeTriangles`
 - Política de unión: `SizeBasedMergingPolicy` según el vecino que tenga mayor tamaño (más aristas).
 
-Las mallas utilizadas se generaron utilizando los scripts `10000x10000RandomPoints.py` y `datagenerator.sh` presentes en el repositorio de Polylla-Mesh-DCEL@RepoPolylla, el cual genera vértices en un cuadrado de 10000 por 10000 y luego hace que Triangle@TriangleCodigo genere una triangulación de Delaunay a partir de ellos. Se generaron 5 mallas de cada tamaño con semillas: 139, 68, 70, 14 y 43. Luego, de forma paralela se ejecuto una instancia del programa con cada semilla para cada número de vértices, considerando que el algoritmo como tal es completamente secuencial y que el procesador de la máquina utilizada posee 6 núcleos, cada ejecución no debería afectar a ninguna otra.
+Las mallas utilizadas se generaron utilizando los scripts `10000x10000RandomPoints.py` y `datagenerator.sh` presentes en el repositorio de Polylla-Mesh-DCEL@RepoPolylla, el cual genera vértices en un cuadrado de 10000 por 10000 y luego hace que Triangle@TriangleCodigo genere una triangulación de Delaunay a partir de ellos. Se generaron 5 mallas de cada tamaño con semillas: 139, 68, 70, 14 y 43. Luego, de forma paralela se ejecutó una instancia del programa con cada semilla para cada número de vértices, considerando que el algoritmo como tal es completamente secuencial y que el procesador de la máquina utilizada posee 6 núcleos, cada ejecución no debería afectar a ninguna otra.
+
+A continuación se muestra una de estas mallas de 100 vértices, su malla Polylla respectiva con la implementación original, su malla basada en cavidades antes de postprocesar y después de postprocesar:
+
+#grid(
+    columns: (auto,auto),
+    inset: (x: 8pt, y:8pt),
+    [#figure(
+    caption: [Malla poligonal generada por Triangle@TriangleCodigo de 100 vértices],
+    image("imagenes/100pts_og.png")
+) <MallaTriangle>],[#figure(
+    caption: [Malla poligonal generada por Polylla original a partir de la @MallaTriangle],
+    image("imagenes/100pts_70_polylla_old.png")
+) <MallaPolylla>], [#figure(
+    caption: [Malla poligonal generada desde cavidades a partir de la @MallaTriangle antes de postprocesar],
+    image("imagenes/100pts_70_pre.png")
+) <MallaCavidadPre>],[#figure(
+    caption: [Malla de la @MallaCavidadPre después de postprocesar],
+    image("imagenes/100pts_70.png")
+) <MallaCavidadPost>]
+)
+
+También, en la @MallaPolylla2, se muestra la misma malla de la @MallaPolylla con la nueva implementación, la cual resulta en una malla idéntica:
+
+#figure(
+    caption: [Malla de la @MallaPolylla con la nueva implementación de Polylla],
+    image("imagenes/100pts_70_polylla_new.png", width: 50%)
+) <MallaPolylla2>
+
+Las mallas anteriores se generaron cargando los archivos `.off` resultantes de ejecutar Polylla y el refinador basado en cavidades en el visualizador Camaron-Web@camaronweb. La malla original también se cargó en Camaron-Web después de convertirla a `.off` utilizando el _script_ `triangle_to_off.py` en el repositorio del proyecto.
 
 Las tablas siguientes muestran el promedio de estas 5 mallas por cada tamaño para distintas métricas:
 
@@ -1089,11 +1150,19 @@ A continuación se presentan múltiples gráficos mostrando la distribución pro
 
     //(Aquí va la conclusión sobre resultados del vem cuando los pueda correr)
 
-    Dado que este trabajo de memoria fue realizado en un semestre, tiene muchos aspectos a mejorar, en particular, es altamente necesario diseñar una forma general de escribir pruebas (o _tests_) unitarias que se adapten bien a la variedad de configuraciones posibles probando invarientes sólidas que se cumplan transversalmente e idealmente sin tener que repetir tests multiples veces. También es de suma importancia buscar maneras más eficientes de implementar el algoritmo para acercarse más al rendimiento de Polylla sin comprometer la legibilidad o flexibilidad del código. Finalmente, es necesario idear una forma más sencilla de generar los archivos ejecutables, ya que el método actual que depende de un _script_ de python se puede hacer difícil de mantener en el tiempo y además, estos archivos generados tienen nombres demasiado largos, lo cual es un problema para el sistema operativo Windows sin antes habilitar la capacidad de tener rutas de archivo de tamaño superior a 260.
+    Dado que este trabajo de memoria fue realizado en un semestre, tiene muchos aspectos a mejorar, en particular, es altamente necesario diseñar una forma general de escribir pruebas (o _tests_) unitarias que se adapten bien a la variedad de configuraciones posibles probando invariantes sólidas que se cumplan transversalmente e idealmente sin tener que repetir tests múltiples veces. También es de suma importancia buscar maneras más eficientes de implementar el algoritmo para acercarse más al rendimiento de Polylla sin comprometer la legibilidad o flexibilidad del código. Finalmente, es necesario idear una forma más sencilla de generar los archivos ejecutables, ya que el método actual que depende de un _script_ de _Python_ se puede hacer difícil de mantener en el tiempo y además, estos archivos generados tienen nombres demasiado largos, lo cual es un problema para el sistema operativo Windows sin antes habilitar la capacidad de tener rutas de archivo de tamaño superior a 260.
 
 ]
 
 #show: end-doc
+
+#apendice(title: "Repositorio del proyecto", label: label("RepoProyecto"))[
+    El repositorio del proyecto con todo el código se encuentra disponible en #link("https://github.com/Tchy258/Delaunay-cavity"), posee un archivo _README.md_ en inglés con las instrucciones para compilar y ejecutar los algoritmos.
+]
+
+#apendice(title: "CLI11", label: label("CLI11Apendice"))[
+    En el código del proyecto se hace uso de la biblioteca CLI11@CLI11, la cual brinda una _API_ fácil de usar para procesar argumentos desde la terminal e incluso leer configuraciones desde un archivo con distintos formatos de manera sencilla.
+]
 
 #apendice(title: "PlantUML y Clang-UML", label: label("PUMLSyn"))[
     El diagrama de clases completo del @Diag mostrado parcialmente a lo largo del @cap3 fue generado utilizando _Clang-UML_, un programa escrito en C++ que permite generar diagramas de proyectos escritos en C++, disponible en:\ 
