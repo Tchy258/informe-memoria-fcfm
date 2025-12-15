@@ -69,8 +69,8 @@
     grado-magister: "COMPUTACIÓN",
 
     comision: (
-      "Éric Tanter",
-      "Mauricio Cerda",
+      "ÉRIC TANTER",
+      "MAURICIO CERDA V.",
     ),
   ),
 )

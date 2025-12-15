@@ -4,9 +4,9 @@
 #let data = (
     ..example-metadata,
     titulo: "GENERACIÓN DE MALLAS POLIGONALES A PARTIR DE CAVIDADES",
-    autoria: (nombre: "Nicolás Escobar Zarzar", pronombre: pronombre.el),
-    profesores: ((nombre: "Nancy Hitschfeld K.", pronombre: pronombre.ella),),
-    coguias: ((nombre: "Sergio Salinas", pronombre: pronombre.el),)
+    autoria: (nombre: "NICOLÁS ESCOBAR ZARZAR", pronombre: pronombre.el),
+    profesores: ((nombre: "NANCY HITSCHFELD KAHLER", pronombre: pronombre.ella),),
+    coguias: ((nombre: "SERGIO SALINAS FERNÁNDEZ", pronombre: pronombre.el),)
 )
 
 #show: conf.with(metadata: data)
