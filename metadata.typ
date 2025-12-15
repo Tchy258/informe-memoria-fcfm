@@ -70,7 +70,7 @@
 
     comision: (
       "ÉRIC TANTER",
-      "MAURICIO CERDA V.",
+      "MAURICIO CERDA VILLABLANCA",
     ),
   ),
 )
