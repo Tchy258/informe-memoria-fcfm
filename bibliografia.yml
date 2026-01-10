@@ -327,7 +327,6 @@ OracleJavaInterfaceTutorial:
 CppReferenceTemplates:
   type: web
   title: Templates — C++ language
-  author: cppreference.com contributors
   url: https://en.cppreference.com/w/cpp/language/templates.html
   date: 2025
   note: cppreference.com — C++ language documentation
@@ -595,3 +594,12 @@ libstd_unordered_map:
   url: https://gcc.gnu.org/onlinedocs/gcc-12.4.0/libstdc++/api/a08628.html
   date: 2024
   note: Insertion requires amortized constant time
+
+cs184_halfedge_figure:
+  type: web
+  title: An Introduction to the Half-Edge Data Structure
+  url: https://cs184.eecs.berkeley.edu/sp24/docs/half-edge-intro
+  author: CS184/284A Course Staff
+  date: 2024
+  organization: University of California, Berkeley
+  note: Figure from “An Introduction to the Half-Edge Data Structure”, used for illustration of half-edges

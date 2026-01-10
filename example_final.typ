@@ -8,7 +8,8 @@
     profesores: ((nombre: "NANCY HITSCHFELD KAHLER", pronombre: pronombre.ella),),
     coguias: ((nombre: "SERGIO SALINAS FERNÁNDEZ", pronombre: pronombre.el),)
 )
-
+#import "@preview/zebraw:0.6.1": *
+#show: zebraw
 #show: conf.with(metadata: data)
 
 #resumen(metadata: data)[
@@ -16,9 +17,9 @@ La generación de mallas poligonales de alta calidad es un problema fundamental 
 
 En este trabajo de memoria se propone y analiza una estrategia alternativa para la generación de mallas poligonales bidimensionales basada en el concepto de cavidad: a partir de una triangulación de Delaunay inicial, el algoritmo selecciona triángulos según criterios definidos por el usuario, calcula sus circuncentros y construye cavidades como el conjunto de triángulos cuyos circuncírculos contienen dichos puntos. La unión de las aristas de borde de cada cavidad define nuevos polígonos, dando origen a una malla poligonal compuesta por elementos de geometría arbitraria.
 
-La solución propuesta se implementa en C++20 haciendo uso de estructuras _half edge_ y un diseño modular basado en _templates_ y _concepts_, lo que permite desacoplar la representación de la malla de los algoritmos de refinamiento. Como parte del trabajo, se reimplementa el generador de mallas Polylla en este nuevo marco de diseño, facilitando su comparación directa con el algoritmo basado en cavidades, y otorgandole mejor legibilidad y capacidad de extensión al código.
+La solución propuesta se implementa en C++20 haciendo uso de estructuras _half edge_ y un diseño modular basado en _templates_ y _concepts_, lo que permite desacoplar la representación de la malla de los algoritmos de generación. Como parte del trabajo, se reimplementa el generador de mallas Polylla en este nuevo marco de diseño, facilitando su comparación directa con el algoritmo basado en cavidades, y otorgandole mejor legibilidad y capacidad de extensión al código.
 
-Los resultados experimentales muestran que el enfoque propuesto es capaz de generar mallas poligonales válidas y de buena calidad geométrica, teniendo una concentración mayor de polígonos con una cantidad de aristas entre 4 a 7; comparables a las obtenidas por Polylla, que tiende a generar polígonos con mayor cantidad de aristas, en términos de cantidad de polígonos, convexidad y distribución de ángulos, pero con tiempos de ejecución y uso de memoria mayores. Finalmente, se discuten aspectos a mejorar y posibles extensiones del trabajo realizado, destacando su potencial como alternativa para la generación de mallas aptas para el VEM.
+Los resultados experimentales muestran que el enfoque propuesto es capaz de generar mallas poligonales válidas y de buena calidad geométrica, teniendo una concentración mayor de polígonos con una cantidad de aristas entre 4 a 7; comparables a las obtenidas por Polylla, en términos de cantidad de polígonos, convexidad y distribución de ángulos, pero con tiempos de ejecución y uso de memoria mayores. Finalmente, se discuten aspectos a mejorar y posibles extensiones del trabajo realizado, destacando su potencial como alternativa para la generación de mallas aptas para el VEM.
 ]
 
 #dedicatoria[
@@ -90,27 +91,45 @@ Finalmente en el capítulo 6 se analizan los resultados obtenidos y un posible t
 En este capítulo se explican los conceptos relevantes utilizados a lo largo del trabajo memoria, relacionados con geometría computacional y el lenguaje de programación #box[C++], adicionalmente, se hará una breve mención del estado del arte en cuanto a generación de mallas con su algoritmo o software pertinente.
 
 == Conceptos relevantes
-=== Triangulación
-Una triangulación es una forma de subdividir un objeto u espacio mediante el uso de triángulos, insertando puntos en su interior para formarlos de ser necesario. Una triangulación es un caso particular de una malla poligonal.
 
-=== Planar Straight Line Graph (PLSG)
-Un conjunto de vértices y segmentos que describen la geometría de un objeto como el de la @PSLGGuitarra. Los segmentos de un PLSG describen una forma o borde concreto que puede no ser convexa como la del ejemplo. 
+=== Polígono, polígono simple y no simple <simpledef>
+Un polígono es un caso particular de figura geométrica en dos dimensiones, compuesto por un conjunto de segmentos de recta conectados que forman una región en el plano (@ejemplo_poligono_cavidad). Un polígono se define como simple, si sus aristas forman un ciclo cerrado, es decir, con una única división entre su interior y exterior. Por otro lado, un polígono no simple, es aquel que posee aristas internas o externas que rompen el ciclo (ver @nosimple). Estos últimos son problemáticos en prácticamente cualquier caso de uso, ya que no permiten 'recorrer' los polígonos una _malla poligonal_ de manera regular y se tratan de eliminar de esta de alguna manera en caso de que estén presentes.
 
-=== Triangulación de Delaunay
-Una triangulación de Delaunay cumple la propiedad de que para todo triángulo que conforma la triangulación, su _circuncirculo_, es decir, el círculo único cuya circunferencia pasa por sus 3 vértices, no contiene ningún punto, como en la @ejemplo_delaunay. Como se mencionó anteriormente, las triangulaciones de Delaunay son particularmente útiles debido a que maximizan el ángulo más pequeño de la triangulación, cuya utilidad será explicada más adelante. Cuando una triangulación de Delaunay se utiliza para subdividir un objeto con un borde concreto, como el de uno descrito por un PLSG, se dice que la triangulación de Delaunay es restringida, ya que debe incluir dichas aristas y no tener aristas fuera del borde. Esta distinción se hace porque típicamente una triangulación de Delaunay suele triangular conjuntos de puntos sin un borde definido inicialmente, el cual termina siendo la cápsula convexa del conjunto, donde su cápsula convexa es el menor polígono convexo (en cuanto a superficie o volumen) que contiene todos los puntos en su interior.
+#figure(
+    grid(
+        columns: (auto, auto),
+        [#image("imagenes/nonsimple.svg",width: 70%)],
+        [#image("imagenes/nonsimple2.svg",width: 70%)]
+    ),
+    caption: "Ejemplos de polígono no simple"
+) <nosimple>
+
+==== Planar Straight Line Graph (PLSG)
+Un conjunto de vértices y segmentos que describen la geometría de un objeto como el de la @PSLGGuitarra. Los segmentos de un PLSG describen una forma o borde concreto que puede no ser convexa como la del ejemplo. Un PLSG se puede utilizar como base para crear una _malla geométrica_.
+
+=== Mallas poligonales <malladef>
+Una malla poligonal, o malla geométrica, es una forma de describir un objeto o un espacio como una colección de polígonos adyacentes. Estos polígonos se denotan según sus vértices y aristas que unen dichos vértices para formarlos (sus caras). Dichos polígonos pueden existir en un espacio en dos, tres o incluso más dimensiones dependiendo del caso de uso. Este trabajo de memoria solo se centrará en aplicaciones a mallas geométricas en 2D. 
+
+Una malla se puede representar de varias formas, siendo la más común una basada en caras, en que se guarda la información de los vértices que componen la malla y qué vértices forman cada cara, siendo las aristas guardadas de manera implícita en las caras. En la solución propuesta se hace uso de esta representación al recibir una malla inicial como entrada contenida en uno o más archivos de texto, ya sea en formato `.node`, `.ele` y opcionalmente `.neigh` que guardan vértices, aristas (en forma de caras) e información de adyacencia respectivamente o en formato `.off` que guarda información de vértices y aristas, pero no de adyacencia. También se escribirán las mallas resultantes en formato `.off` o en el formato `.ale`, que también posee una representación basada en caras, el cual puede convertirse al formato binario `.mat` utilizado principalmente por MATLAB u otro software científico para usar la malla en una solución numérica de una ecuación diferencial en derivadas parciales. Estos formatos se describen más a fondo en el @formatos.
+
+Además de su representación, una malla poligonal también se puede clasificar en distintos tipos según los polígonos que la componen y las características que estos cumplen. La representación más común es mediante una malla compuesta por triángulos, también llamada triangulación. Una triangulación divide el objeto u espacio a representar mediante el uso de triángulos, insertando puntos en su interior para formarlos de ser necesario. Dado que el triángulo es el polígono con menos aristas, este permite hacer una discretización, es decir, una división en partes concretas, del objeto o espacio a modelar con mayor precisión, y además, estos tienen la ventaja de ser siempre convexos y sus vértices viven en el mismo plano en el caso de mallas en tres dimensiones (3D). Las mallas basadas en triángulos son particularmente útiles para describir objetos en sistemas CAD usadas como esquema de diseño para algún tipo de objeto concreto en 3D afecto a fenómenos físicos como la distribución de fuerzas, cuya simulación es más fiel a la realidad en un objeto descrito con el mayor nivel de detalle que sea razonable utilizar. Estas mallas también son ampliamente utilizadas en videojuegos por las mismas razones.
+
+Un caso particular de triangulación, es la llamada triangulación de Delaunay, esta triangulación cumple la propiedad de que para todo triángulo que conforma la triangulación, su _circuncirculo_, es decir, el círculo único cuya circunferencia pasa por sus 3 vértices, no contiene ningún punto, como en la @ejemplo_delaunay. Como se mencionó anteriormente, las triangulaciones de Delaunay son particularmente útiles debido a que maximizan el ángulo más pequeño de la triangulación, cuya utilidad será explicada más adelante. Cuando una triangulación de Delaunay se utiliza para subdividir un objeto con un borde concreto, como el de uno descrito por un PLSG, se dice que la triangulación de Delaunay es restringida, ya que debe incluir dichas aristas y no tener aristas fuera del borde. Esta distinción se hace porque típicamente una triangulación de Delaunay suele triangular conjuntos de puntos sin un borde definido inicialmente, el cual termina siendo la cápsula convexa del conjunto, donde su cápsula convexa es el menor polígono convexo (en cuanto a superficie o volumen) que contiene todos los puntos en su interior.
 
 === Cavidad <DefCavidad>
 En la explicación de la solución se dará a entender como cavidad el polígono resultante de aplicar el algoritmo propuesto, es decir, dado un triángulo 'semilla' $t_i$ con circuncentro $p_i$, la cavidad será el polígono formado por la unión de las aristas de borde del conjunto de triángulos $t$ cuyo circuncírculo contiene al circuncentro $p_i$ del triángulo 'semilla' en su interior. Ver @ejemplo_poligono_cavidad.
 
-=== Diagrama de Voronoi
-Un diagrama de Voronoi es una partición de un dominio $P$ en regiones o 'celdas' $R_i$, de las cuales cada una contiene un punto $p_i$ llamado 'semilla' y los puntos $q_i$ contenidos en $R_i$ cumplen que $||q_i-p_i|| < ||q_i - p_j|| forall p_i, p_j in P, i != j$ donde $p_j$ es la semilla de cualquier otra celda distinta a $R_i$. El diagrama de Voronoi también se le conoce como el _dual_ de una triangulación de Delaunay, esto se debe a que, dada una triangulación de Delaunay, se puede obtener su diagrama de Voronoi equivalente si los circuncentros de los triángulos se convierten en puntos para las regiones de Voronoi (el circuncentro es el punto al centro del circuncírculo de un triángulo). Al unir los circuncentros mediante aristas, se forman las regiones del diagrama de Voronoi. 
+=== Mallas poligonales de polígonos arbitrarios
+Otro uso de las mallas poligonales es en el cálculo de una solución numérica en la resolución de ecuaciones diferenciales en derivadas parciales, que describen diversos fenómenos como transferencia de calor o sonido en un espacio u objeto, las cuales no son calculables de manera exacta con un procedimiento analítico. Esta solución numérica se puede aproximar mediante el uso del _Virtual Element Method_@VEM (VEM). Para el VEM son de particular importancia las mallas poligonales basadas en polígonos arbitrarios que cumplen ciertas propiedades de calidad, como tener polígonos simples, mayormente convexos, con ángulos no muy grandes ni muy pequeños, entre otras. Si la malla a utilizar parte desde una triangulación de Delaunay, algunas de estas propiedades son más fáciles de alcanzar. El uso de mallas basadas en polígonos arbitrarios permite un cálculo más rápido para el VEM y con un margen de error aceptable.
 
-Las regiones de un diagrama de Voronoi normalmente se extienden 'hacia el infinito' (@UnboundVoronoiExample), pero al igual que las triangulaciones de Delaunay restringidas, también existe el diagrama de Voronoi restringido. En la @VoronoiExample se puede ver un ejemplo de una triangulación de Delaunay restringida con su diagrama de Voronoi restringido respectivo superpuesto. También en la @delaunay_voronoi_dual se puede ver una triangulación de Delaunay no restringida (segmentos en el borde corresponden a la cápsula convexa) junto con su diagrama de Voronoi superpuesto.
+Un caso particular de malla poligonal de polígonos arbitrarios, es aquella basada en un _diagrama de Voronoi_ cuando este está restringido. Un diagrama de Voronoi es una partición de un dominio $P$ en regiones o 'celdas' $R_i$, de las cuales cada una contiene un punto $p_i$ llamado 'semilla' y los puntos $q_i$ contenidos en $R_i$ cumplen que $||q_i-p_i|| < ||q_i - p_j|| forall p_i, p_j in P, i != j$ donde $p_j$ es la semilla de cualquier otra celda distinta a $R_i$. Las regiones de un diagrama de Voronoi normalmente se extienden 'hacia el infinito' (@UnboundVoronoiExample), pero al igual que las triangulaciones de Delaunay restringidas, también existe el diagrama de Voronoi restringido cuando este modela una geometría particular, usualmente basado en una misma triangulación de Delaunay restringida.
 
 #figure(
     image("/imagenes/unbound_voronoi.png", width: 50%),
     caption: [Ejemplo de diagrama de Voronoi. Fuente: Software Detri2@Detri2]
 ) <UnboundVoronoiExample>
+
+El diagrama de Voronoi también se le conoce como el _dual_ de una triangulación de Delaunay, esto se debe a que, dada una triangulación de Delaunay, se puede obtener su diagrama de Voronoi equivalente si los circuncentros de los triángulos se convierten en puntos para las regiones de Voronoi (el circuncentro es el punto al centro del circuncírculo de un triángulo). Al unir los circuncentros mediante aristas, se forman las regiones del diagrama de Voronoi. En la @VoronoiExample se puede ver un ejemplo de una triangulación de Delaunay restringida con su diagrama de Voronoi restringido respectivo superpuesto. También en la @delaunay_voronoi_dual se puede ver una triangulación de Delaunay no restringida (segmentos en el borde corresponden a la cápsula convexa) junto con su diagrama de Voronoi superpuesto.
 
 #figure(
     grid(
@@ -128,15 +147,14 @@ Las regiones de un diagrama de Voronoi normalmente se extienden 'hacia el infini
     caption: [Triangulación de Delaunay (en negro) junto a su diagrama de voronoi (en rojo). Fuente: Wikimedia@VoronoiSVG]
 ) <delaunay_voronoi_dual>
 
-El diagrama de Voronoi es otro caso particular de malla poligonal.
 
-=== Malla poligonal <malladef>
-Una malla poligonal, o malla geométrica, es una forma de describir un objeto o un espacio como una colección de polígonos adyacentes. Estos polígonos se denotan según sus vértices y aristas que unen dichos vértices para formarlos (sus caras). Dichos polígonos pueden existir en un espacio en dos, tres o incluso más dimensiones dependiendo del caso de uso. Este trabajo de memoria solo se centrará en aplicaciones a mallas geométricas en 2D. 
+=== _Finite Element Method_ (FEM) y _Virtual Element Method_ (VEM)
+Como fue mencionado anteriormente, el VEM@VEM es un método numérico para resolver ecuaciones diferenciales haciendo uso de las mallas poligonales arbitrarias, pero antes de que existiese el VEM, existía el FEM@FEMOverview@FEMOg, estos métodos numéricos tienen el mismo objetivo, pero se diferencian en la flexibilidad permitida de los datos de entrada, siendo el FEM mucho más rígido respecto a la malla de entrada, en particular, el FEM no permite polígonos no convexos y solo acepta polígonos de un solo tipo particular como entrada, ya sean triángulos, cuadriláteros, u otros, pero siendo todos del mismo tipo, lo que no lo hace viable para algoritmos como el desarrollado en este tema de memoria.
 
-Una malla se puede representar de varias formas, siendo la más común una basada en caras, en que se guarda la información de los vértices que componen la malla y qué vértices forman cada cara, siendo las aristas guardadas de manera implícita en las caras. En la solución propuesta se hace uso de esta representación al recibir una malla como entrada contenida en uno o más archivos de texto, ya sea en formato `.node`, `.ele` y opcionalmente `.neigh` que guardan vértices, aristas (en forma de caras) e información de adyacencia respectivamente o en formato `.off` que guarda información de vértices y aristas, pero no de adyacencia. También se escribirán las mallas resultantes en formato `.off` o en el formato `.ale`, que también posee una representación basada en caras, el cual puede convertirse al formato binario `.mat` utilizado principalmente por MATLAB u otro software científico para usar la malla en una solución numérica de una ecuación diferencial en derivadas parciales. Estos formatos se describen más a fondo en el @formatos.
+
 
 === Estructura _Half-Edge_ <HalfEdgeStructDef>
-Además de la representación basada en caras, se hará uso de la estructura _Half-Edge_@HalfEdgeStruct@weiler1986topological, la cual guarda los vértices y divide las aristas de cada polígono en dos, una arista en sentido horario (abreviado como _CW_ por _clockwise_ del inglés) y otra en sentido antihorario (abreviado como _CCW_ por _counter clockwise_). Por convención, una arista en sentido antihorario, se considera como una arista interna a un polígono y un polígono cualquiera se representa como el ciclo completo que inicia desde una arista en sentido CCW y vuelve a la misma. Cada arista posee la siguiente información: un vértice de origen (_origin_), un vértice objetivo (_target_), su arista siguiente y anterior (según su orientación, llamadas _next_ y _prev_ respectivamente), y su arista 'gemela' (_twin_), la cual representa la misma arista en el sentido contrario la cual es interna al polígono vecino si no está en el borde de la malla. En la @EjemploHE se puede ver un ejemplo de esta estructura.
+Además de la representación basada en caras para mallas poligonales, se hará uso de la estructura _Half-Edge_@HalfEdgeStruct@weiler1986topological, la cual guarda los vértices y divide las aristas de cada polígono en dos, una arista en sentido horario (abreviado como _CW_ por _clockwise_ del inglés) y otra en sentido antihorario (abreviado como _CCW_ por _counter clockwise_). Por convención, una arista en sentido antihorario, se considera como una arista interna a un polígono y un polígono cualquiera se representa como el ciclo completo que inicia desde una arista en sentido CCW y vuelve a la misma. Cada arista posee la siguiente información: un vértice de origen (_origin_), un vértice objetivo (_target_), su arista siguiente y anterior (según su orientación, llamadas _next_ y _prev_ respectivamente), y su arista 'gemela' (_twin_), la cual representa la misma arista en el sentido contrario la cual es interna al polígono vecino si no está en el borde de la malla. En la @EjemploHE se puede ver un ejemplo de esta estructura.
 
 #figure(
     image("imagenes/Dcel-halfedge-connectivity.svg", width:45%),
@@ -147,31 +165,11 @@ La estructura _Half-Edge_ brinda una enorme versatilidad al momento de recorrer 
 
 #figure(
     image("imagenes/halfedge.jpg"),
-    caption: [Segundo ejemplo de estructura _half-edge_]
+    caption: [Segundo ejemplo de estructura _half-edge_@cs184_halfedge_figure]
 ) <EjemploHE2>
 
 Haciendo uso de las operaciones anteriores también es posible determinar el 'grado' de un vértice, donde el 'grado' (o _degree_) de un vértice se entiende como la cantidad de aristas cuyo origen es este vértice.
 
-=== Mallas triangulares
-Las mallas poligonales se suelen describir como conjuntos de triángulos, ya que al ser el polígono con menos aristas permite hacer una discretización, es decir, una división en partes concretas, del objeto o espacio a modelar con mayor precisión y además, estos tienen la ventaja de ser siempre convexos y sus vértices viven en el mismo plano en el caso de mallas en tres dimensiones (3D). Las mallas basadas en triángulos son particularmente útiles para describir objetos en sistemas CAD usualmente usadas como esquema de diseño para algún tipo de objeto concreto en 3D afecto a fenómenos físicos como la distribución de fuerzas, cuya simulación es más fiel a la realidad en un objeto descrito con el mayor nivel de detalle que sea razonable utilizar. Estas mallas también son ampliamente utilizadas en videojuegos por las mismas razones.
-
-=== Mallas de polígonos arbitrarios
-Otro uso de las mallas poligonales es en el cálculo de una solución numérica en la resolución de ecuaciones diferenciales en derivadas parciales, que describen diversos fenómenos como transferencia de calor o sonido en un espacio u objeto, las cuales no son calculables de manera exacta con un procedimiento analítico. Esta solución numérica se puede aproximar mediante el uso del _Virtual Element Method_@VEM (VEM). Para el VEM son de particular importancia las mallas poligonales basadas en polígonos arbitrarios que cumplen ciertas propiedades de calidad, como tener polígonos simples, mayormente convexos, con ángulos no muy grandes ni muy pequeños, entre otras. Si la malla a utilizar parte desde una triangulación de Delaunay, algunas de estas propiedades son más fáciles de alcanzar. El uso de mallas basadas en polígonos arbitrarios permite un cálculo más rápido para el VEM y con un margen de error aceptable.
-
-=== _Finite Element Method_ (FEM) y _Virtual Element Method_ (VEM)
-Como fue mencionado anteriormente, el VEM@VEM es un método numérico para resolver ecuaciones diferenciales haciendo uso de las mallas poligonales arbitrarias, pero antes de que existiese el VEM, existía el FEM@FEMOverview@FEMOg, estos métodos numéricos tienen el mismo objetivo, pero se diferencian en la flexibilidad permitida de los datos de entrada, siendo el FEM mucho más rígido respecto a la malla de entrada, en particular, el FEM no permite polígonos no convexos y solo acepta polígonos de un solo tipo particular como entrada, ya sean triángulos, cuadriláteros, u otros, pero siendo todos del mismo tipo, lo que no lo hace viable para algoritmos como el desarrollado en este tema de memoria.
-
-=== Polígono simple y no simple <simpledef>
-Un polígono se define como simple, si sus aristas forman un ciclo cerrado, es decir, con una clara división entre su interior y exterior. Por otro lado, un polígono no simple, es aquel que posee aristas internas o externas que rompen el ciclo (ver @nosimple). Estos últimos son problemáticos en prácticamente cualquier caso de uso, ya que no permiten 'recorrer' los polígonos de la malla de manera regular y se tratan de eliminar de la malla de alguna manera en caso de que estén presentes.
-
-#figure(
-    grid(
-        columns: (auto, auto),
-        [#image("imagenes/nonsimple.svg",width: 80%)],
-        [#image("imagenes/nonsimple2.svg",width: 100%)]
-    ),
-    caption: "Ejemplos de polígono no simple"
-) <nosimple>
 
 
 
@@ -181,13 +179,15 @@ Para este trabajo de memoria se hace uso del lenguaje de programación C++ en su
 Se escogió este lenguaje por su alto rendimiento y por el hecho de que la implementación de Polylla@RepoPolylla en la que se basa este trabajo fue escrita en este lenguaje. La versión específica del estándar se escoge para asegurar mejor compatibilidad y por la introducción de _concepts_@ConceptSource@Concepts2 al lenguaje.
 
 
-En C++ es posible declarar una 'plantilla' (o _template_@CppReferenceTemplates@stroustrup2013cpp) de una clase 'A' otorgándole un parámetro de tipo que en principio puede ser cualquier cosa, generalmente a este tipo genérico se le llama '`T`', y dentro de la clase se puede operar con variables declaradas con un tipo '`T`' sin hacer ninguna verificación preliminar. Una vez que la clase se utiliza efectivamente dentro del código es cuando este tipo genérico `T` se debe declarar explícitamente como algún tipo concreto particular, y es solo entonces cuando el compilador genera el código máquina relevante para que la clase 'A' donde _'T' es dicho tipo concreto_, exista. Es en este momento en que se verifica que la clase `A<T>` para ese tipo `T` concreto sea válida, es decir, verificar que toda variable de tipo `T` tenga todos los métodos que se solicitan de ella (si es que se utilizó alguno) y si `T` es utilizado dentro de métodos que reciben algo distinto de `T`, que `T` sea _convertible_ a dicho tipo. Por ejemplo, si el método pide un tipo `int` y `T` es algún otro tipo numérico convertible a `int`, entonces `A<T>` es válida, pero si `T` es `std::string`, el código no compilará.
+En C++ es posible declarar una 'plantilla' (o _template_@CppReferenceTemplates@stroustrup2013cpp) de una clase 'A' otorgándole un parámetro de tipo que en principio puede ser cualquier cosa, generalmente a este tipo genérico se le llama '`T`','`U`', o similar; y dentro de la clase se puede operar con variables declaradas con un tipo '`T`' sin hacer ninguna verificación preliminar. Una vez que la clase se utiliza efectivamente dentro del código es cuando este tipo genérico `T` se debe declarar explícitamente como algún tipo concreto particular, y es solo entonces cuando el compilador genera el código máquina relevante para que la clase 'A' donde _'T' es dicho tipo concreto_, exista. Es en este momento en que se verifica que la clase `A<T>` para ese tipo `T` concreto sea válida, es decir, verificar que toda variable de tipo `T` tenga todos los métodos que se solicitan de ella (si es que se utilizó alguno) y si `T` es utilizado dentro de métodos que reciben algo distinto de `T`, que `T` sea _convertible_ a dicho tipo. Por ejemplo, si el método pide un tipo `int` y `T` es algún otro tipo numérico convertible a `int`, entonces `A<T>` es válida, pero si `T` es `std::string`, el código no compilará.
 
-También es posible tener una 'especialización' de una clase que tiene un parámetro _template_, esto significa declarar de manera explícita una clase `A` donde su tipo `T` es algún tipo concreto como `float`, en tal caso, la especialización sobreescribe a la clase genérica, descartando cualquier método o miembro que esta tenga a favor de lo que la especialización indique, es decir, si `A<T>` tiene un método `foo`, pero existe una especialización `A<float>`, entonces `A<float>` debe declarar su propia versión del método `foo` y es esa implementación la que se invoca.
+También es posible tener una 'especialización' de una clase que tiene un parámetro _template_, esto significa declarar de manera explícita una clase `A` donde su tipo `T` es algún tipo concreto como `float`, en tal caso, la especialización tiene prioridad y sobreescribe a la clase genérica en el momento en que es instanciada, descartando cualquier método o miembro que esta tenga a favor de lo que la especialización indique, es decir, si `A<T>` tiene un método `foo`, pero existe una especialización `A<float>`, entonces `A<float>` debe declarar su propia versión del método `foo` y es esa implementación la que se invoca para una variable de tipo `A<float>`.
 
-El uso de _templates_ no está limitado a clases completas, sino que también es posible declarar métodos específicos dentro de una clase (e inclusive funciones libres fuera de una clase) con parámetros _template_, los cuales pueden ser distintos de los parámetros _template_ de la clase (si es que la clase los posee), y también pueden especializarse cumpliendo una función similar a la sobrecarga de métodos (_method overloading_), en la que se puede tener varias implementaciones del mismo método con distinta cantidad de argumentos o argumentos de distinto tipo.
+El uso de _templates_ no está limitado a clases completas, sino que también es posible declarar métodos específicos dentro de una clase (e inclusive funciones libres fuera de una clase) con parámetros _template_, los cuales pueden ser distintos de los parámetros _template_ de la clase (si es que la clase los posee), y también pueden especializarse cumpliendo una función similar a la sobrecarga de métodos (_method overloading_), en la que se puede tener varias implementaciones del mismo método con distinta cantidad de argumentos o argumentos de distinto tipo. Esto es de particular utilidad al momento de declarar una sola vez funciones que operan con interfaces comunes, pero poseen excepciones para tipos específicos. 
 
-Si bien los tipos _template_@CppReferenceTemplates@stroustrup2013cpp proveen una muy alta flexibilidad, también son muy propensos a errores, ya que una clase declarada con un tipo _template_, no es realmente una clase hasta el momento en que es instanciada, y si alguna condición para que la clase sea válida no se cumple, el mensaje de error del compilador suele ser muy largo y engorroso, y a menudo indicando errores en lugares no relacionados como funciones de la biblioteca estándar.
+Un ejemplo de uso de templates, es una función `max` o `min` que, en vez de recibir 1 o 2 tipos concretos definiendo una sobrecarga para cada par de tipos, le basta con recibir argumentos de tipos _template_ `T` y `U` que tengan una relación de orden bien definida, usualmente a través de los métodos `operator<()` y `operator>()` que definen el comportamiento de utilizar los símbolos `<` (menor que) y `>` (mayor que), con variables de tipos `T` y `U`. Si se desea, también es posible declarar una especialización donde el tipo de `T` y el tipo `U` son explícitamente iguales, o una especialización donde uno de los tipos es fijo y tiene alguna lógica extra involucrada que solo le concierne a este y no al otro. Por ejemplo, en el caso de una función que determine un 'orden' particular sobre strings donde un string 'mínimo' se define como aquel que tiene menos caracteres y estos tienen menor valor en un orden lexicográfico.
+
+Si bien los tipos _template_@CppReferenceTemplates@stroustrup2013cpp proveen una muy alta flexibilidad, también son muy propensos a errores, ya que una clase declarada con un tipo _template_, no es realmente una clase hasta el momento en que es instanciada (sin contar 'especializaciones', las cuales si son clases concretas), y si alguna condición para que la clase sea válida no se cumple, el mensaje de error del compilador suele ser muy largo y engorroso, y a menudo indicando errores en lugares no relacionados como funciones de la biblioteca estándar.
 
 Para remediar esto, C++20 introduce los _concept_\s@ConceptSource@Concepts2, similar a la función que cumple una `interface` en el lenguaje Java@OracleJavaInterfaceTutorial para especificar que una clase debe implementar sus métodos para ser válida. Un _concept_ permite indicar una serie de requerimientos o restricciones que un tipo _template_ debe cumplir para siquiera ser un candidato a tipo dentro de una clase, y esto no solo está restringido a la implementación de métodos, sino que también se pueden especificar atributos que el tipo o clase `T` debe tener, ya sean estáticos o no. Esto es de especial utilidad para este trabajo debido a que permite definir un _alias_ para otro tipo dentro de `T` cuya existencia está asegurada por el _concept_, añadiendo una capa de abstracción que prescinde de detalles específicos relacionados con tipos concretos que un `T` pueda definir dentro de él, otorgando mayor flexibilidad a que cada `T` opere como desee con sus tipos alias indistintamente de quien sea la clase que utilice a `T` como tipo _template_.
 
@@ -204,7 +204,7 @@ El algoritmo generador de mallas poligonales implementado en Triangle @TriangleP
 
 #figure(
     image("/imagenes/pslg.png", width: 80%),
-    caption: [PSLG de entrada una guitarra electrica como se ilustra en Triangle @TrianglePaper]
+    caption: [PSLG de entrada una guitarra electrica con un número de vértices y segmentos no definidos como se ilustra en Triangle @TrianglePaper]
 ) <PSLGGuitarra>
 
 #figure(
@@ -311,7 +311,7 @@ El algoritmo Polylla destaca por sobre otros algoritmos debido a su gran simplic
 
 En este trabajo se hará uso de la implementación del algoritmo Polylla presente en el repositorio _Polylla-Mesh-DCEL_@RepoPolylla, el cual hace uso de la estructura _half-edge_.
 
-El algoritmo de construcción de mallas basado en cavidades se muestra como una alternativa a Polylla y mallas basadas en el diagrama de Voronoi que permite generar mallas de poligonos arbitrarios, las cuales pueden ser utilizadas para el VEM@VEM.
+El algoritmo de construcción de mallas basado en cavidades se muestra como una alternativa a Polylla y mallas basadas en el diagrama de Voronoi que permite generar mallas de polígonos arbitrarios, las cuales pueden ser utilizadas para el VEM@VEM.
 
 === CGAL
 La librería CGAL@CGAL (_Computational Geometry Algorithms Library_) es un proyecto de código abierto escrito en C++ que aloja una basta colección de algoritmos geométricos y estructuras de datos eficientes y robustos. Su propósito es facilitar tareas geométricas complejas que aparecen en dominios tan variados como sistemas de información geográfica, diseño asistido por computador, biología molecular, imágenes médicas, gráficos por computador o robótica.
@@ -329,87 +329,23 @@ A continuación se describirá a modo general como funciona esta implementación
 
 == Polylla-Mesh-DCEL@RepoPolylla
 
-Esta implementación de Polylla (@AlgoPolylla) escrita en C++, a diferencia de la implementación original basada en caras@PolyllaPaper, usa _half-edges_ (@HalfEdgeStructDef). Polylla-Mesh-DCEL hace uso de 2 estructuras de datos y 2 clases esenciales, siendo estas: `vertex`, `halfEdge`, `Triangulation` y `Polylla`. Estas son utilizadas dentro de una función `main`.
+Esta implementación de Polylla (@AlgoPolylla) escrita en C++, a diferencia de la implementación original basada en caras@PolyllaPaper, usa _half-edges_ (@HalfEdgeStructDef). Polylla-Mesh-DCEL hace uso de 2 estructuras de datos y 2 clases esenciales, siendo estas: `vertex`, `halfEdge`, `Triangulation` y `Polylla`. Estas son utilizadas dentro de una función `main` que recibe argumentos posicionales con distinto significado según su cantidad, para procesar archivos o determinar una ruta de salida. 
+
+A continuación se presentan figuras mostrando partes del diagrama UML de clases de la implementación presente en el @Diag. La iconografía de estas figuras y otras representaciones UML está disponible en el @PUMLSyn.
 
 #figure(
-    caption: [Estructura `vertex` de Polylla-Mesh-DCEL],
-    box(
-        fill: rgb("#d3d3d3"),
-        inset: 8pt,
-        radius: 4pt,
-```cpp
-struct vertex {
-    double x;
-    double y;
-    bool is_border = false;
-    int incident_halfedge; // <- indice a un array de halfedges
-};
-    ```        
-    )
-) <codigovertex>
+    caption: [Representación UML de estructuras `vertex` y `halfEdge` de Polylla-Mesh-DCEL],
+    image("imagenes/vertex_hedge_uml.png")
+) <umlvertexhedge>
 
 La estructura `vertex` describe un punto, o vértice, de la malla conteniendo sus coordenadas _x_ e _y_. También posee un booleano que indica si el vértice es parte del borde de la malla y un número entero que representa un índice hacia algún `halfEdge` que tiene a este vértice como origen dentro de un objeto de la clase `Triangulation` en un arreglo de tamaño dinámico (implementado con un objeto de clase `vector` de C++).
 
-#figure(
-    caption: [Estructura `halfEdge` de Polylla-Mesh-DCEL],
-    box(
-        fill: rgb("#d3d3d3"),
-        inset: 8pt,
-        radius: 4pt,
-```cpp
-struct halfEdge {
-    int origin;
-    int twin; 
-    int next;
-    int prev;
-    int is_border;
-};
-```        
-    )
-) <codigohalfedge>
+La estructura `halfEdge` contiene toda la información que compone a un _half-edge_ como se mencionó en la @HalfEdgeStructDef (salvo por _target_ que es implícito). Todos estos atributos son índices a vectores dentro de la clase `Triangulation` resumida a continuación.
 
-La estructura `halfEdge` contiene toda la información que compone a un _half-edge_ como se mencionó en la @HalfEdgeStructDef. Todos estos atributos son índices a vectores dentro de la clase `Triangulation` resumida a continuación.
 
 #figure(
-    caption: [Clase `Triangulation` de Polylla-Mesh-DCEL@RepoPolylla (abreviada)],
-    box(
-        fill: rgb("#d3d3d3"),
-        inset: 8pt,
-        radius: 4pt,
-```cpp
-class Triangulation
-{
-private:
-    std::vector<vertex> Vertices;
-    std::vector<halfEdge> HalfEdges;
-    void read_nodes_from_file(std::string name);
-    std::vector<int> read_triangles_from_file(std::string name);
-    void construct_interior_halfEdges_from_faces(std::vector<int> &faces);
-    std::vector<int>  read_neigh_from_file(std::string name);
-    void construct_interior_halfEdges_from_faces(std::vector<int> &faces);
-    void construct_interior_halfEdges_from_faces_and_neighs(std::vector<int> &faces, std::vector<int> &neighs);
-    void construct_exterior_halfEdges();
-    std::vector<int> read_OFFfile(std::string name);
-    // Y otros atributos
-public:
-    Triangulation(); // <- sin uso real
-    Triangulation(std::string node_file, std::string ele_file, std::string neigh_file);
-    Triangulation(std::string OFF_file);
-    Triangulation(const Triangulation &t); //<- constructor de copia
-    Triangulation(int size); //<- constructor de malla aleatoria
-    ~Triangulation();
-    int origin(int e);
-    int target(int e);
-    int next(int e);
-    int prev(int e);
-    int twin(int e);
-    int CW_edge_to_vertex(int e);
-    int CCW_edge_to_vertex(int e);
-    int degree(int v);
-    // Y otros métodos
-}
-```
-    )
+    caption: [Representación UML de la clase `Triangulation` de Polylla-Mesh-DCEL@RepoPolylla],
+    image("imagenes/triangulation_uml.png")
 )
 
 La clase `Triangulation`, posee 2 miembros de tipo `vector` que contienen objetos `vertex` y objetos `halfEdge` respectivamente. Además, define los métodos necesarios para recorrer la malla haciendo uso de los índices definidos en `vertex` y `halfEdge`. Estos incluyen todas las operaciones definidas en la @HalfEdgeStructDef como _next_, _prev_, _origin_, _target_ y _twin_. Notar que no hay un atributo _target_ en la estructura `halfEdge`, ya que este está guardado de forma implícita como el atributo `origin` del `halfEdge` apuntado por `twin`.
@@ -423,55 +359,11 @@ También tiene un constructor para leer archivos en formato `.off`, extensamente
 
 La clase `Triangulation` es extensamente utilizada dentro de la clase `Polylla`:
 #figure(
-    caption: [Clase `Polylla` de Polylla-Mesh-DCEL@RepoPolylla (abreviada)],
-    box(
-        fill: rgb("#d3d3d3"),
-        inset: 8pt,
-        radius: 4pt,
-```cpp
-class Polylla
-{
-private:
-    typedef std::vector<int> _polygon; 
-    typedef std::vector<char> bit_vector; 
-
-
-    Triangulation *mesh_input; 
-    Triangulation *mesh_output;
-    std::vector<int> output_seeds; 
-
-    bit_vector max_edges; 
-    bit_vector frontier_edges; 
-    std::vector<int> seed_edges;
-
-    std::vector<int> triangle_list;
-    bit_vector seed_bet_mark;
-    // Y otros atributos
-public:
-    Polylla() {}; //<- sin uso real
-    Polylla(Triangulation *input_mesh);
-    Polylla(std::string off_file);
-    Polylla(std::string node_file, std::string ele_file, std::string neigh_file);
-    Polylla(int size);
-    ~Polylla();
-    void construct_Polylla();
-    void print_stats(std::string filename);
-    void print_ALE(std::string filename);
-    void print_OFF(std::string filename);
-private:
-    bool is_seed_edge(int e);
-    int label_max_edge(const int e);
-    bool is_frontier_edge(const int e);
-    int search_frontier_edge(const int e);
-    bool has_BarrierEdgeTip(int e_init);
-    int travel_triangles(const int e);
-    int calculate_middle_edge(const int v);
-    void barrieredge_tip_reparation(const int e);
-    int generate_repaired_polygon(const int e, bit_vector &seed_list);
-```)
+    caption: [Representación UML de la clase `Polylla` de Polylla-Mesh-DCEL@RepoPolylla],
+    image("imagenes/og_polylla_uml.png"),
 )
 
-La clase `Polylla` implementa en su totalidad el algoritmo descrito en la @AlgoPolylla. Esta recibe como argumento en su constructor un objeto de la clase `Triangulation` o los argumentos necesarios para generar uno. Posterior a ello llama al método `construct_Polylla()` que realiza todas las etapas del algoritmo para refinar la malla: etiquetado de aristas máximas (vector `max_edges`) y aristas frontera (vector `frontier_edges`) para posteriormente etiquetar aristas semilla (vector `seed_edges`) para formar las regiones terminales, recorrer dichas regiones terminales para corroborar si forman un polígono simple y si no, repararlo.
+La clase `Polylla` implementa en su totalidad el algoritmo descrito en la @AlgoPolylla. Esta recibe como argumento en su constructor un objeto de la clase `Triangulation` o los argumentos necesarios para generar uno. Posterior a ello llama al método `construct_Polylla()` que realiza todas las etapas del algoritmo para generar la malla: etiquetado de aristas máximas (vector `max_edges`) y aristas frontera (vector `frontier_edges`) para posteriormente etiquetar aristas semilla (vector `seed_edges`) para formar las regiones terminales, recorrer dichas regiones terminales para corroborar si forman un polígono simple y si no, repararlo.
 
 Si bien las clases de Polylla-Mesh-DCEL cumplen adecuadamente la implementación del algoritmo Polylla@PolyllaPaper, estas poseen diversos problemas de diseño que las hacen difíciles de extender para otros usos y enormemente complejas de entender sin un estudio profundo del código debido al uso excesivo de tipos primitivos como `int`, que si bien son esencialmente índices, varios métodos reciben como argumento una variable de tipo `int`, pero el tipo de índice al que esta variable se refiere depende del método y la única forma de saber a cuál corresponde es tener conocimiento de como funciona la estructura _half-edge_ y nombres de variables muy poco descriptivos tales como _e_ o _v_. También su documentación es escasa y a veces poco clara. Esto hace muy propenso a errores cualquier modificación que se le realice al código.
 
@@ -487,7 +379,7 @@ Esta implementación de Polylla fue hecha considerando la mayor eficiencia posib
 
 Para reescribir Polylla-Mesh-DCEL brindándole más modularidad se propone un diseño basado en clases altamente genéricas utilizando tipos _template_ con sus _concepts_ asociados (véase @TemplateConceptDef), disponible en #link("https://github.com/Tchy258/Delaunay-cavity")
 
-La clase principal de este diseño es la clase 'PolygonalMesh', la cual hace uso extensivo del patrón de diseño _Strategy_@gamma1994strategy delegando las funciones de leer y escribir archivos geométricos, contener una malla y refinar la malla a clases dedicadas, siendo el tipo de la malla un tipo _template_ restringido por un _concept_ utilizado como parámetro por todas ellas. Esta clase se muestra en la @UMLPMesh. La iconografía de esta figura y otras representaciones UML está disponible en el @PUMLSyn, mientras que el diagrama completo está disponible en el @Diag.
+La clase principal de este diseño es la clase 'PolygonalMesh', la cual hace uso extensivo del patrón de diseño _Strategy_@gamma1994strategy delegando las funciones de leer y escribir archivos geométricos, contener una malla y generar la malla a clases dedicadas, siendo el tipo de la malla un tipo _template_ restringido por un _concept_ utilizado como parámetro por todas ellas. Esta clase se muestra en la @UMLPMesh. El diagrama completo está disponible en el @Diag.
 
 #figure(
     caption: [Representación UML de la clase `PolygonalMesh`],
@@ -506,14 +398,17 @@ El _concept_ `MeshData` a su vez está compuesto de 8 otros _concepts_ específi
 - `MeshMemory`: _Concept_ de utilidad que declara métodos para calcular el uso de memoria de una malla, usado para medir rendimiento.
 
 
-Como se puede notar, estos _concepts_ se basan muy fuertemente en la definición de malla que brindaba la clase `Triangulation`, pero delegan la tarea de leer los vértices hacia otra clase, eliminando la restricción de solo poder leer mallas no aleatorias desde archivos. La clase que se adhiere a estos _concepts_ y es un reemplazo directo a `Triangulation` es la clase `HalfEdgeMesh` de la @HEMeshUML.
+Como se puede notar, estos _concepts_ se basan muy fuertemente en la definición de malla que brindaba la clase `Triangulation`, pero delegan la tarea de leer los vértices hacia otra clase, eliminando la restricción de solo poder leer mallas desde archivos. La clase que se adhiere a estos _concepts_ y es un reemplazo directo a `Triangulation` es la clase `HalfEdgeMesh` de la @HEMeshUML.
 
 #figure(
     caption: [Representación UML de la clase `HalfEdgeMesh`],
     image("imagenes/hemeshuml.png")
 ) <HEMeshUML>
 
+Esta clase carece del constructor de `Triangulation` que recibía un número entero, puesto que su única función era generar una malla compuesta por una grilla cuadrada, la cual perfectamente puede ser provista desde fuera.
+
 Esta clase implementa la estructura _half-edge_ haciendo uso de los _structs_ `HEVertex` y `HalfEdge` de la @HEdgesUML, adaptados de Polylla-Mesh-DCEL. Notar que en C++, la única diferencia entre _struct_ y _class_ es que la visibilidad por defecto es distinta, siendo `public` en el primero y `private` en el segundo, pero en realidad ambos son clases capaces de definir atributos y métodos.
+
 
 #figure(
     caption: [Representación UML de las clases `Vertex`, `HEVertex` y `HalfEdge`],
@@ -521,9 +416,12 @@ Esta clase implementa la estructura _half-edge_ haciendo uso de los _structs_ `H
 ) <HEdgesUML>
 
 Además de los atributos que poseían los _struct_ `vertex` y `halfEdge` de Polylla-Mesh-DCEL, se hace una distinción entre un vértice genérico (`Vertex`) y un vértice especializado para _half-edges_ (`HEVertex`), puesto que en la mayoría de los casos es suficiente operar con un vértice como si tuviese tipo `Vertex` con las operaciones que este define, son de particular utilidad sus métodos públicos:
-- `operator*,+,-,==`: Azúcar sintáctica que permite escribir en código operaciones como $v_1 + v_2$ que suma cada coordenada por separado, o $v_1 * s$ que multiplica las coordenadas de un punto $v_1$ por un valor escalar $s$, como se esperaría al operar con puntos en un plano en dos dimensiones.
+- `operator*,+,-,==`: Azúcar sintáctica que permite escribir en código operaciones como $v_1 + v_2$ que suma cada coordenada por separado, o $v_1 * s$ que multiplica las coordenadas de un punto $v_1$ por un valor escalar $s$, como se esperaría al operar con puntos en un plano en dos dimensiones, en vez de llamar métodos como `.plus` o `.multilply`.
 - `cross2d`: Dados 3 vértices $v_1$, $v_2$, y $v_3$, `v1.cross2d(v2,v3)` retorna el valor de la coordenada $z$ al hacer un producto cruz entre los vectores formados por $v_2 - v_1$ y $v_3 - v_1$. Esta operación permite determinar la orientación en la que se encuentran los vértices, horario o antihorario, según su signo, donde un valor positivo representa una orientación en sentido antihorario, y un valor negativo, una orientación en sentido horario. Este valor también equivale a la mitad del área de un triángulo formado por estos 3 vértices, lo cual se puede extender para calcular el área de cualquier polígono arbitrario.
-- `dot`: Operación de producto punto entre 2 vectores, útil al calcular el largo de una arista entre vértices $v_1$ y $v_2$, ya que el producto punto de un vector consigo mismo equivale al cuadrado de su norma euclidiana.
+- `dot`: Operación de producto punto entre 2 vectores, útil al calcular el largo de una arista entre vértices $v_1$ y $v_2$, ya que el producto punto de un vector consigo mismo equivale al cuadrado de su norma euclidiana. En este caso el 'vector' es el `vertex` resultante de la resta entre $v_1$ y $v_2$. Si bien es cierto que esta operación no es realmente una operación entre vertices, la resta entre ellos se puede interpretar como un vector, y un vértice por si solo se puede considerar como un vector que parte en el origen. La equivalencia del producto punto de un vector consigo mismo con el cuadrado de la norma euclidiana viene del hecho de que el producto punto se define como:\
+    $A dot B = |A| times |B| cos(theta)$\
+    En este caso $A = B$ y $theta = 0 arrow.r.double A dot A = |A|^2$
+
 - `findCircumcenter` e `inCircle`: Adaptando la lógica de Triangle@TriangleCodigo, estos métodos permiten encontrar el circuncírculo de un triángulo y determinar si un punto está $P$ está en el interior del círculo descrito por los puntos $A$, $B$ y $C$ usando un método basado en determinantes@Circumcircle. Estos métodos son cruciales para la formación de cavidades.
 
 Continuando con otros miembros de la clase `PolygonalMesh` de la @UMLPMesh, se tienen variables con clase `std::unique_ptr<MeshReader>` y `std::unique_ptr<MeshWriter>`, estos objetos son los llamados _smart pointers_@stroustrup2013cpp de C++, los cuales, a diferencia de punteros estándar, saben como manejar su memoria en el _heap_, con un costo leve de rendimiento. Para estos dos miembros se prefiere el uso de _smart pointers_ porque, como mucho, se necesitan una sola vez cada uno para leer y escribir la malla a archivos, siendo despreciable el costo de rendimiento asociado comparado a la función que estos objetos realizan (entrada y salida de archivos). Los objetos de tipo `Mesh`, en cambio, son usados múltiples veces a lo largo de distintas de clases, por lo que convertirlos en _smart pointers_ resultaría en una disminución considerable de rendimiento. 
@@ -541,7 +439,7 @@ Continuando con otros miembros de la clase `PolygonalMesh` de la @UMLPMesh, se t
     image("imagenes/mesh_writer_uml.png")
 ) <UMLWriter>
 
-A diferencia de la clase `Triangulation` que recibe objetos de tipo `string` representando nombres de archivo, las clases que extienden `MeshReader` y `MeshWriter` utilizan un `vector` de objetos tipo `filesystem::path` de manera explícita, dando entender inmediatamente que estos parámetros hacen referencia a rutas en el sistema de archivos y no a cualquier `string`. Además, el hecho de que el argumento sea un `vector` le da más flexibilidad para que formatos que lean o escriban múltiples archivos tengan una interfaz uniforme. El método `isWhitespace` de `MeshReader` era una función libre declarada en el archivo `triangulation.hpp`@RepoPolylla, pero que no era parte de `Triangulation`, este método es usado para leer mallas correctamente.
+A diferencia de la clase `Triangulation` que recibe objetos de tipo `string` representando nombres de archivo, las clases que extienden `MeshReader` y `MeshWriter` utilizan un `vector` de objetos tipo `filesystem::path` de manera explícita, dando entender inmediatamente que estos parámetros hacen referencia a rutas en el sistema de archivos y no a cualquier `string`. Además, el hecho de que el argumento sea un `vector` le da más flexibilidad para que formatos que lean o escriban múltiples archivos tengan una interfaz uniforme. El método `isWhitespace` de `MeshReader` era una función libre declarada en el archivo `triangulation.hpp`@RepoPolylla, pero que no era parte de `Triangulation`, este método es usado para leer mallas correctamente omitiendo caracteres de espacios en blanco.
 
 La clase `MeshReader` tiene 2 implementaciones concretas: `NodeEleReader` y `OffReader` que leen los formatos mencionados en la @malladef, siendo estos `.node`, `.ele` y `.neigh` para el primero y `.off` para el segundo (@formatos). Estas clases se pueden ver en la @UmlReaders
 
@@ -561,28 +459,28 @@ La clase `MeshWriter` también tiene 2 implementaciones concretas: `OffWriter` y
     caption: [Representación UML de las clases `OffWriter` y `AleWriter`]
 ) <UmlWriters>
 
-Siguiendo con los miembros de `PolygonalMesh`, también se declara la clase `MeshRefiner`:
+Siguiendo con los miembros de `PolygonalMesh`, también se declara la clase `MeshGenerator`:
 
 #figure(
-    image("imagenes/uml_refiner.png"),
-    caption: [Representación UML de la clase `MeshRefiner`]
+    image("imagenes/uml_generator.png"),
+    caption: [Representación UML de la clase `MeshGenerator`]
 )
 
-Esta clase abstracta declara los métodos que un refinador de mallas debe implementar, incluyendo aquellos que permiten recolectar estadísticas y obtener el conjunto correcto de índices de salida de la malla, puesto que, por temas de eficiencia de memoria, prácticamente nunca se eliminan elementos de la malla, estos se invalidan en la gran mayoría de los casos al omitirlos o marcarlos con el valor `invalidIndexValue`.
+Esta clase abstracta declara los métodos que un generador de mallas debe implementar, incluyendo aquellos que permiten recolectar estadísticas y obtener el conjunto correcto de índices de salida de la malla, puesto que, por temas de eficiencia de memoria, prácticamente nunca se eliminan elementos de la malla, estos se invalidan en la gran mayoría de los casos al omitirlos o marcarlos con el valor `invalidIndexValue`.
 
-La clase `MeshRefiner` posee dos implementaciones concretas: `PolyllaRefiner` que encapsula la lógica del algoritmo Polylla@RepoPolylla original y `DelaunayCavityRefiner` que representa el refinador basado en cavidades.
+La clase `MeshGenerator` posee dos implementaciones concretas: `PolyllaGenerator` que encapsula la lógica del algoritmo Polylla@RepoPolylla original y `DelaunayCavityGenerator` que representa el generador basado en cavidades.
 
-La clase `PolyllaRefiner` implementa los métodos declarados en `MeshRefiner` y define el alias `BinaryVector` que corresponde a un `vector` de C++ que almacena valores de tipo `uint8_t` (al igual que la implementación original), es decir, enteros sin signo de 8 bits, que solo guardan valor 0 o 1. Esto se hace por razones de alineamiento de memoria y rendimiento, puesto que utilizar un `vector` de valores tipo `bool`, intenta comprimir la memoria de forma que el acceso y escritura pueden no ser directos y resultar en problemas de compatibilidad con otras funciones de la librería estándar de C++ según múltiples fuentes@geeksforgeeks_vector_bool@learncpp_vector_bool@wg21_n1847@autosar_cpp14_a18_1_2@misra_cpp_2023_rule2631@meyers_effective_stl@josuttis_cpp_standard_library.
+La clase `PolyllaGenerator` implementa los métodos declarados en `MeshGenerator` y define el alias `BinaryVector` que corresponde a un `vector` de C++ que almacena valores de tipo `uint8_t` (al igual que la implementación original), es decir, enteros sin signo de 8 bits, que solo guardan valor 0 o 1. Esto se hace por razones de alineamiento de memoria y rendimiento, puesto que utilizar un `vector` de valores tipo `bool`, intenta comprimir la memoria de forma que el acceso y escritura pueden no ser directos y resultar en problemas de compatibilidad con otras funciones de la librería estándar de C++ según múltiples fuentes@geeksforgeeks_vector_bool@learncpp_vector_bool@wg21_n1847@autosar_cpp14_a18_1_2@misra_cpp_2023_rule2631@meyers_effective_stl@josuttis_cpp_standard_library.
 
 #figure(
     image("imagenes/uml_polylla.png"),
-    caption: [Representación UML de la clase `PolyllaRefiner`]
+    caption: [Representación UML de la clase `PolyllaGenerator`]
 ) <umlpolylla>
 
-Las implementaciones de `MeshRefiner` también tienen una implementación de la clase `MeshRefinerData` (@umlrefdata), la cual provee contenedores dinámicos en forma de _hash maps_ para almacenar estadísticas que se almacenan una sola vez, ya que escribir a un _hash map_ es una operación con complejidad $O(1)$ amortizado@libstd_unordered_map y puede afectar negativamente el rendimiento. Para mitigar esto se hacen 2 cosas: primero, las llaves de estos _hash map_ son valores enteros predefinidos en 3 enumeraciones (_enum_) distintas que representan el grupo de estadística con un valor numérico asociado, aprovechándose de que el _hash_ de un valor `int` puede ser el mismo valor, y segundo, se escribe un 0 de manera temprana en todas las estadísticas que el refinador efectivamente utilice logrando que cada estadística ya tenga una llave existente en el _hash map_ para escrituras futuras. Estos 3 _enum_ mencionados son los siguientes: `MeshStat` con enteros para estadísticas de la malla, como su cantidad de polígonos, cantidad de _barrier edge tips_ reparados en caso de Polylla, entre otros; `TimeStat` con valores de tipo `double` para estadísticas de tiempo y `MemoryStat` con valores de tipo `unsigned long long` para estadísticas de memoria.
+Las implementaciones de `MeshGenerator` también tienen una implementación de la clase `MeshGeneratorData` (@umlrefdata), la cual provee contenedores dinámicos en forma de _hash maps_ para almacenar estadísticas que se almacenan una sola vez, ya que escribir a un _hash map_ es una operación con complejidad $O(1)$ amortizado@libstd_unordered_map y puede afectar negativamente el rendimiento. Para mitigar esto se hacen 2 cosas: primero, las llaves de estos _hash map_ son valores enteros predefinidos en 3 enumeraciones (_enum_) distintas que representan el grupo de estadística con un valor numérico asociado, que serán descritos más adelante, aprovechándose de que el _hash_ de un valor `int` puede ser el mismo valor, y segundo, se escribe un 0 de manera temprana en todas las estadísticas que el generador efectivamente utilice logrando que cada estadística ya tenga una llave existente en el _hash map_ para escrituras futuras. Estos 3 _enum_ mencionados son los siguientes: `MeshStat` con enteros para estadísticas de la malla, como su cantidad de polígonos, cantidad de _barrier edge tips_ reparados en caso de Polylla, entre otros; `TimeStat` con valores de tipo `double` para estadísticas de tiempo como el tiempo de generación de la malla, cuanto tiempo tardó una etapa en particular, entre otros; y `MemoryStat` con valores de tipo `unsigned long long` para estadísticas de memoria como la cantidad de bytes utilizados por cada arreglo.
 #figure(
-    image("imagenes/uml_refiner_data.png"),
-    caption: [Representación UML de la clase `MeshRefinerData`]
+    image("imagenes/uml_generator_data.png"),
+    caption: [Representación UML de la clase `MeshGeneratorData`]
 ) <umlrefdata>
 #figure(
     image("imagenes/uml_stats.png"),
@@ -591,56 +489,56 @@ Las implementaciones de `MeshRefiner` también tienen una implementación de la 
 
 Dentro de su archivo _header_, cada enumeración también define un arreglo estático y constante de _strings_ con el 'nombre' asociado a la estadística, esto facilita el trabajo de escribir estadísticas a un archivo `json` como lo hacía la implementación original de Polylla, con la ventaja de ser menos propenso a errores en caso de añadir una estadística nueva, puesto que se hará referencia a este arreglo de _strings_ y no se escribirá el _string_ directamente. Estos arreglos están marcados como `constexpr`@Libroconstexpr, por lo que en tiempo de compilación sus valores se reemplazan literalmente en el lugar en que son utilizados. Esta configuración provee una manera altamente genérica de escribir estadísticas con el método `writeStatsToJson` de la clase `PolygonalMesh`, aprovechando la estructura de un _hash map_ como contenedor de tipo llave-valor para hacer una escritura directa de su contenido sin importar cuál sea este, por lo que introducir estadísticas nuevas no requiere modificaciones al método.
 
-La clase `MeshRefinerData` define dentro de sí métodos altamente genéricos para calcular un valor 'total' de algún grupo de estadística, particularmente, de tiempo y memoria.
+La clase `MeshGeneratorData` define dentro de sí métodos altamente genéricos para calcular un valor 'total' de algún grupo de estadística, particularmente, de tiempo y memoria.
 
 #figure(
     image("imagenes/uml_polylla_data.png"),
     caption: [Representación UML de la clase `PolyllaData`]
 ) <umlpolylladata>
 
-La clase `PolyllaData` utilizada por la clase `PolyllaRefiner` se encarga de almacenar los arreglos que poseía la clase `Polylla` original, esto se hace de esta forma dado que implementaciones de Polylla con distintos tipos de malla, podrían necesitar otras estructuras de datos o métodos especiales, los cuales se pueden declarar como una especialización concreta para la malla en cuestión sin necesidad de modificar la clase `PolyllaRefiner` original.
+La clase `PolyllaData` utilizada por la clase `PolyllaGenerator` se encarga de almacenar los arreglos que poseía la clase `Polylla` original, esto se hace de esta forma dado que implementaciones de Polylla con distintos tipos de malla, podrían necesitar otras estructuras de datos o métodos especiales, los cuales se pueden declarar como una especialización concreta para la malla en cuestión sin necesidad de modificar la clase `PolyllaGenerator` original.
 
-Además de las clases que implementan `MeshRefinerData`, también existen clases aparte, denominadas `MeshHelper` en _namespaces_ de C++ distintos, que engloban funciones estáticas que describen cada operación específica que un refinador debe realizar en una malla con un tipo concreto, esto permite separar lo que es el algoritmo de refinado de mallas como tal de detalles de implementación dependientes de la malla.
+Además de las clases que implementan `MeshGeneratorData`, también existen clases aparte, denominadas `MeshHelper` en _namespaces_ de C++ distintos, que engloban funciones estáticas que describen cada operación específica que un generador debe realizar en una malla con un tipo concreto, esto permite separar lo que es el algoritmo de generación de mallas como tal de detalles de implementación dependientes de la malla.
 
 #figure(
     image("imagenes/uml_helper_polylla.png"),
     caption: [Representación UML de la clase `MeshHelper` de Polylla]
 ) <umlpolyllahelper>
 
-En la @umlpolyllahelper, los métodos están marcados como `deleted` porque estos pasos no son implementables de manera genérica sin mezclar la lógica de refinado de mallas dentro de las mallas mismas, por lo que esta tarea es delegada a las especializaciones de esta clase, las cuales se encargan de definir estos detalles de implementación para tipos de malla específicos. Actualmente esta clase solo tiene una especialización para mallas de tipo `HalfEdgeMesh` utilizando exactamente la misma lógica que Polylla-Mesh-DCEL@RepoPolylla, pero con variables y métodos renombrados para que sean más descriptivos. El tipo `RefinementData` utilizado en esta clase es un _alias_ para una implementación concreta de `PolyllaData` con el tipo de malla utilizado para llamar los métodos de esta clase auxiliar. `PolyllaRefiner` declara el uso de esta clase de la manera siguiente:
+En la @umlpolyllahelper, los métodos están marcados como `deleted` porque estos pasos no son implementables de manera genérica sin mezclar la lógica de generación de mallas dentro de las mallas mismas, por lo que esta tarea es delegada a las especializaciones de esta clase, las cuales se encargan de definir estos detalles de implementación para tipos de malla específicos. Actualmente esta clase solo tiene una especialización para mallas de tipo `HalfEdgeMesh` utilizando exactamente la misma lógica que Polylla-Mesh-DCEL@RepoPolylla, pero con variables y métodos renombrados para que sean más descriptivos. El tipo `GeneratorData` utilizado en esta clase es un _alias_ para una implementación concreta de `PolyllaData` con el tipo de malla utilizado para llamar los métodos de esta clase auxiliar. `PolyllaGenerator` declara el uso de esta clase de la manera siguiente:
 ```cpp
-using _MeshHelper = refiners::helpers::polylla::MeshHelper<MeshType>;
+using _MeshHelper = generators::helpers::polylla::MeshHelper<MeshType>;
 ```
 Lo cual de manera transitiva, hace que `MeshHelper` declare `PolyllaData` con el tipo de malla correspondiente:
 ```cpp
-using RefinementData = PolyllaData<MeshType>;
+using GeneratorData = PolyllaData<MeshType>;
 ```
 
-La clase `DelaunayCavityRefiner` de la @umldelaunay implementa el algoritmo propuesto basado en cavidades, esta clase tiene una estructura altamente modular, donde cada parámetro _template_ representa una variación distinta de como operan ciertas etapas del algoritmo, las cuales pueden enfocarse en generar cavidades a partir de triángulos diferentes, resultando en mallas con formas ligeramente distintas que pueden ser aptas para distintos casos de uso según el usuario estime conveniente.
+La clase `DelaunayCavityGenerator` de la @umldelaunay implementa el algoritmo propuesto basado en cavidades, esta clase tiene una estructura altamente modular, donde cada parámetro _template_ representa una variación distinta de como operan ciertas etapas del algoritmo, las cuales pueden enfocarse en generar cavidades a partir de triángulos diferentes, resultando en mallas con formas ligeramente distintas que pueden ser aptas para distintos casos de uso según el usuario estime conveniente.
 
 #figure(
     image("imagenes/uml_delaunay.png"),
-    caption: [Representación UML de la clase `DelaunayCavityRefiner`]
+    caption: [Representación UML de la clase `DelaunayCavityGenerator`]
 ) <umldelaunay>
 
 Estos parámetros _template_ constan de lo siguiente:
 - `MeshType`: El tipo de malla a utilizar, en la implementación actual solo es posible utilizar la malla basada en _half edges_ de la clase `HalfEdgeMesh`.
-- `Criterion`: Un objeto sujeto a la restricción del _concept_ `RefinementCriterion`, este objeto se utiliza para determinar que triángulos son más 'malos' según lo que determine el criterio en particular, que podría ser tener un ángulo mínimo menor a un cierto umbral, un área menor a un cierto umbral, entre otros. Estos triángulos 'malos' son los primeros en ser utilizados como posibles 'semillas' de una cavidad (@DefCavidad).
+- `Criterion`: Un objeto sujeto a la restricción del _concept_ `SelectionCriterion`, este objeto se utiliza para determinar que triángulos son más 'malos' según lo que determine el criterio en particular, que podría ser tener un ángulo mínimo menor a un cierto umbral, un área menor a un cierto umbral, entre otros. Estos triángulos 'malos' son los primeros en ser utilizados como posibles 'semillas' de una cavidad (@DefCavidad).
 - `Comparator`: Objeto restringido por el _concept_ `TriangleComparator`, el cual se encarga de ordenar los triángulos de la malla para determinar cuales se escogen primero como 'semilla' después de que el objeto de `Criterion` haga una partición inicial.
 - `MergingStrategy`: Objeto restringido por el _concept_ `CavityMergingStrategy`, este se encarga de determinar reglas para unir los triángulos que forman una cavidad, ya sea durante la formación inicial o durante algún paso de postprocesado que este objeto defina si es que dicho paso existe.
 
 Los _concepts_ mencionados previamente se definen de la manera siguiente:
-- `RefinementCriterion`: Declara que todo criterio de refinado debe definir el método `operator()`, con dos argumentos: una malla de entrada y un índice de cara de la malla. Este método debe retornar algo convertible a `bool` (generalmente `bool`). Este valor de retorno indica si el triángulo dado debe ser seleccionado como triángulo 'semilla' de forma prioritaria o no.
+- `SelectionCriterion`: Declara que todo criterio de selección debe definir el método `operator()`, con dos argumentos: una malla de entrada y un índice de cara de la malla. Este método debe retornar algo convertible a `bool` (generalmente `bool`). Este valor de retorno indica si el triángulo dado debe ser seleccionado como triángulo 'semilla' de forma prioritaria o no.
 - `TriangleComparator`: Declara que todo comparador de triángulos debe tener un método estático `compare` que recibe 3 argumentos: una malla de entrada, y dos índices de cara, `t1` y `t2`. Este método `compare` se utiliza como parámetro en la función `std::sort` de C++, la cual le indica como se deben comparar dos triángulos al ordenarse. Debe retornar `true` si el triángulo representado por `t1` es 'menor' que `t2`, es decir, que `t1` debe aparecer antes en el arreglo tras ordenar, asumiendo un orden ascendente. Esto se invierte si el orden es descendiente.
 - `CavityMergingStrategy`: Declara que toda estrategia de unión de cavidades debe definir al menos uno de los siguientes 4 métodos estáticos:
     + `preAdd` (según información de cavidades): Método que recibe una malla de entrada, un índice de cara y un arreglo (`vector` de C++) de cavidades y retorna `true` si el triángulo es un candidato valido para formar parte de una cavidad. Este _concept_ en la implementación actual no tiene uso real, ya que fue supercedido por una versión alternativa, pero se deja en caso de que otra implementación futura no pueda utilizar la versión alternativa y necesite más información respecto a la malla o las cavidades para determinar elegibilidad.
-    + `preAdd` (según presencia en cavidades): Método que recibe dos argumentos: un índice de cara y un arreglo (`vector`) de enteros sin signo utilizado exclusivamente con valores 0 o 1, similar al `BinaryVector` de `PolyllaRefiner`. Este método verifica elegibilidad basándose en el arreglo que índica si el triángulo dado ya forma parte de una cavidad o no.
+    + `preAdd` (según presencia en cavidades): Método que recibe dos argumentos: un índice de cara y un arreglo (`vector`) de enteros sin signo utilizado exclusivamente con valores 0 o 1, similar al `BinaryVector` de `PolyllaGenerator`. Este método verifica elegibilidad basándose en el arreglo que índica si el triángulo dado ya forma parte de una cavidad o no.
     + `postCompute`: Método que recibe la malla de entrada y el arreglo de cavidades, su rol es realizar cualquier operación necesaria que se estime conveniente después de computar que triángulos forman las cavidades, pero antes de proceder a la inserción efectiva de estas. Actualmente no tiene uso, pero se deja en caso de que una futura implementación lo necesite por algún motivo.
-    + `postInsertion`: Método que recibe la malla de entrada, la malla de salida con las cavidades ya insertadas y un objeto `DelaunayCavityData`, implementación de `MeshRefinerData` para el refinador basado en cavidades (@umlcavitydata). Este método se encarga de realizar cualquier operación de postproceso necesaria una vez que las cavidades ya fueron insertadas según lo que determine la estrategia de unión en particular.
+    + `postInsertion`: Método que recibe la malla de entrada, la malla de salida con las cavidades ya insertadas y un objeto `DelaunayCavityData`, implementación de `MeshGeneratorData` para el generador basado en cavidades (@umlcavitydata). Este método se encarga de realizar cualquier operación de postproceso necesaria una vez que las cavidades ya fueron insertadas según lo que determine la estrategia de unión en particular.
 
 En este último _concept_ se puede observar la gran flexibilidad que otorga un _concept_ mezclado con el uso de `if constexpr`@Libroconstexpr, permitiendo definir estrategias de unión que solo implementan aquellos métodos que realmente necesitan, eliminando por completo las líneas de código del binario final relacionadas al uso de métodos que esta no utilice.
 
-La clase `DelaunayCavityRefiner` hace uso de la estructura `Cavity` para encapsular los componentes de una cavidad a medida que estas se van construyendo, esta estructura se puede ver en la @umlcavity.
+La clase `DelaunayCavityGenerator` hace uso de la estructura `Cavity` para encapsular los componentes de una cavidad a medida que estas se van construyendo, esta estructura se puede ver en la @umlcavity.
 #figure(
     image("imagenes/uml_cavity.png"),
     caption: [Representación UML de la estructura `Cavity`]
@@ -648,7 +546,7 @@ La clase `DelaunayCavityRefiner` hace uso de la estructura `Cavity` para encapsu
 
 La estructura de cavidad guarda los triangulos que componen la cavidad, sus aristas de borde, triángulos de borde y triángulos interiores.
 
-Al igual que la clase `PolyllaRefiner`, la clase `DelaunayCavityRefiner` también posee su implementación de `MeshRefinerData` y su `MeshHelper` respectivo, pero a diferencia de `PolyllaRefiner`, tiene más pasos que se pueden generalizar para todo tipo de malla y no dependen por completo en su `MeshHelper`.
+Al igual que la clase `PolyllaGenerator`, la clase `DelaunayCavityGenerator` también posee su implementación de `MeshGeneratorData` y su `MeshHelper` respectivo, pero a diferencia de `PolyllaGenerator`, tiene más pasos que se pueden generalizar para todo tipo de malla y no dependen por completo en su `MeshHelper`.
 
 #figure(
     image("imagenes/uml_cavity_data.png"),
@@ -660,42 +558,42 @@ Al igual que la clase `PolyllaRefiner`, la clase `DelaunayCavityRefiner` tambié
     caption: [Representación UML de la clase `MeshHelper` del algoritmo basado en Cavidades]
 ) <umlcavityhelper>
 
-Las implementaciones concretas de estos parámetros y el funcionamiento del refinador basado en cavidades serán descritos más a fondo en el capítulo siguiente.
+Las implementaciones concretas de estos parámetros y el funcionamiento del generador basado en cavidades serán descritos más a fondo en el capítulo siguiente.
 ]
 
-#capitulo(title: "Solución")[
-== Algoritmo de refinado de mallas basado en cavidades
-El algoritmo de refinado de mallas basado en cavidades consta de 4 etapas: Selección y ordenamiento de triángulos, computo de circuncentro y cavidades, inserción de cavidades y un paso opcional de postprocesado.
+#capitulo(title: "Implementación de algoritmo basado en cavidades")[
+A continuación se muestra la solución al problema: el algoritmo de generación de mallas basado en cavidades, detallando los pasos que lo componen, junto con pseudocódigo ilustrativo.
+
+== Algoritmo de generación de mallas basado en cavidades
+El algoritmo de generación de mallas basado en cavidades consta de 4 etapas: Selección y ordenamiento de triángulos, computo de circuncentro y cavidades, inserción de cavidades y un paso opcional de postprocesado.
 === Selección y ordenamiento de triángulos según criterios
-Además de la malla triangular de input, el algoritmo también necesita comparadores y criterios de refinado, los cuales están descritos por los _concepts_ `TriangleComparator` y `RefinementCriterion`, es según estos comparadores y criterios el cómo se decide el orden en que las cavidades serán calculadas y posteriormente insertadas. 
+Además de la malla triangular de input, el algoritmo también necesita comparadores y criterios de selección, los cuales están descritos por los _concepts_ `TriangleComparator` y `SelectionCriterion`, es según estos comparadores y criterios el cómo se decide el orden en que las cavidades serán calculadas y posteriormente insertadas. 
 
 Durante el semestre se desarrollaron los siguientes comparadores de triángulos, los cuales pueden ordenar de forma ascendente o descendente si es que aplica:
 - `AngleComparator`: Ordena según ángulo mínimo o máximo.
-- `AreaComparator`: Ordena según área o doble del área.
+- `AreaComparator`: Ordena según el valor del área o doble del área.
 - `EdgeLengthComparator`: Ordena según largo mínimo o máximo de las aristas.
 - `NullComparator`: No cambia el orden de los triángulos y este se mantiene según como vienen en la malla.
 - `RandomComparator`: Revuelve los triángulos con un generador psuedoaleatorio _mersenne twister_@MatsumotoNishimura1998 con un objeto del tipo `std::mt19937` de C++. La semilla es configurable por el usuario.
 
-También se desarrollaron los siguientes criterios de refinado que priorizan triángulos que cumplen con alguna característica deseada o indeseada, para que sean los primeros en considerarse como parte de una cavidad:
+También se desarrollaron los siguientes criterios de selección que priorizan triángulos que cumplen con alguna característica deseada o indeseada, para que sean los primeros en considerarse como parte de una cavidad:
 - `MinAngleCriterion`: Prioriza triángulos donde el coseno cuadrado del ángulo mínimo esté por debajo de un umbral. Se prefiere usar coseno cuadrado por su eficiencia, de la misma forma que se hace en el código de Triangle@TriangleCodigo. Su correctitud está asegurada mientras se trabaje con ángulos agudos.
 - `MinAngleCriterionRobust`: Similar al anterior, pero calcula los ángulos reales mediante la función arcocoseno, computacionalmente caro.
 - `MinAreaCriterion`: Prioriza triángulos donde el área esté por debajo de un umbral.
 - `MinArea2Criterion`: Similar al anterior, pero ahorra una operación al utilizar el doble del área, resultado directo de un producto cruz en 2 dimensiones.
-- `NullRefinementCriterion`: No prioriza ningún triángulo y permite al comparador ordenar la totalidad de ellos.
+- `NullSelectionCriterion`: No prioriza ningún triángulo y permite al comparador ordenar la totalidad de ellos.
 
-Inicialmente, se planteaba la capacidad de componer estos criterios de refinado con pequeños funtores simulando álgebra booleana para tener criterios arbitrariamente complejos, los cuales existen, pero dada la cantidad infinita de formas en que estos pueden ser compuestos, no fueron utilizados durante pruebas:
+Inicialmente, se planteaba la capacidad de componer estos criterios de selección con pequeños funtores simulando álgebra booleana para tener criterios arbitrariamente complejos, los cuales existen, pero dada la cantidad infinita de formas en que estos pueden ser compuestos, no fueron utilizados durante pruebas:
 - `NotCriterion`: Invierte un criterio, es decir, prioriza aquellos que no son priorizados por un criterio particular.
 - `AndCriteria`: Dados dos criterios (incluyéndose a sí mismo como 'un criterio'), solo prioriza un triángulo si este es priorizado por ambos criterios. Cumple la función de un _y_ lógico.
 - `OrCriteria`: Similar al anterior, pero le basta con que sea priorizado por un criterio o ambos. Cumple la función de un _o_ lógico.
 
 
 Esta parte del algoritmo sigue los pasos del siguiente pseudocódigo:
-#table(columns: 100%,)[Etapa 1: Selección de triángulos][Entrada: Malla inicial $M$, Comparador $O$, Criterio de refinado $R$][Salida: Conjunto de triángulos ordenados antes del cómputo de cavidades]
+#table(columns: 100%,)[Etapa 1: Selección de triángulos][Entrada: Malla inicial $M$, Comparador $O$, Criterio de selección $R$][Salida: Conjunto de triángulos ordenados antes del cómputo de cavidades]
 #figure(
     caption: [Algoritmo de selección de triangulos],
-    [#box(
-        fill: rgb("#d3d3d3"),
-        inset: 8pt,
+    [#zebraw(
         radius: 4pt,
 ```
 L ← Lista de triangulos de M
@@ -712,11 +610,11 @@ return L
 ```
 )
 ])
-Notar que en la implementación actual, tanto el comparador como el criterio de refinado preservan el orden relativo de los triángulos, haciendo uso de las funciones de la librería estándar de C++ `std::stable_sort` y `std::stable_partition`.
+Notar que en la implementación actual, tanto el comparador como el criterio de selección preservan el orden relativo de los triángulos, haciendo uso de las funciones de la librería estándar de C++ `std::stable_sort` y `std::stable_partition`.
 
 La implementación de estas funciones varía levemente según el compilador, siendo el algoritmo _merge sort_@libstdcxx-stable_sort@libstdcxx-stable_sort-details@libcxx-stable_sort-source@msvc-stl-stable_sort@cppreference-stable_sort la base común para `std::stable_sort` y alguna variación de _divide and conquer_@libstdcxx-stable_partition@libstdcxx-constexpr-stable_partition-2025@libcxx-stable_partition-source@cppreference-stable_partition para `std::stable_partition`.
 
-También cabe destacar que, dado que tanto el comparador como el criterio de refinado son parámetros _template_, todos los `if` de este paso se resuelven en tiempo en compilación usando la instrucción `if constexpr`@Libroconstexpr  introducida en C++17, la cual, de manera similar a una macro, permite descartar o incluir ramas completas del código máquina presentes en el archivo ejecutable final. Se diferencia de una macro en el hecho de que es capaz de usar características de reflexión intrínsecas del lenguaje (además de revisarse después de haber procesado macros), incluyendo validaciones de _concepts_ para asegurar una correctitud más rigurosa que no compromete la eficiencia del programa final por no necesitar hacer validaciones en tiempo de ejecución.
+También cabe destacar que, dado que tanto el comparador como el criterio de selección son parámetros _template_, todos los `if` de este paso se resuelven en tiempo en compilación usando la instrucción `if constexpr`@Libroconstexpr  introducida en C++17, la cual, de manera similar a una macro, permite descartar o incluir ramas completas del código máquina presentes en el archivo ejecutable final. Se diferencia de una macro en el hecho de que es capaz de usar características de reflexión intrínsecas del lenguaje (además de revisarse después de haber procesado macros), incluyendo validaciones de _concepts_ para asegurar una correctitud más rigurosa que no compromete la eficiencia del programa final por no necesitar hacer validaciones en tiempo de ejecución.
 
 === Cómputo de circuncentro y cavidades
 
@@ -781,12 +679,10 @@ A continuación se presentan estos mismos pasos en forma de pseudocódigo:
     caption: [Algoritmo de cómputo de cavidades],
     grid( columns: (50%, 50%),
     [
-    #box(
-        fill: rgb("#d3d3d3"),
-        inset: 8pt,
+    #zebraw(
         radius: 4pt,
 ```
-D ← {∅}
+D ← {∅} Arreglo vacío para guardar cavidades
 V ← Arreglo de booleanos para marcar triangulos visitados
 I ← Arreglo auxiliar para marcar triángulos que ya forman parte de una cavidad
 
@@ -820,24 +716,9 @@ for cada tᵢ ∈ C do
     end if
 ```
 )], [
-    #show raw.where(block: true): code => {
-    grid(
-        columns: (auto, auto),
-        column-gutter: 1em,
-        row-gutter: par.leading,
-        align: (right, raw.align),
-        ..for line in code.lines {
-        (
-            text(fill: gray)[#calc.abs(line.number + 32)],
-            line.body,
-        )
-        },
-    )
-    }
-    #box(
-        fill: rgb("#d3d3d3"),
-        inset: 8pt,
+    #zebraw(
         radius: 4pt,
+        numbering-offset: 32,
 ```
     for cada vecino n ∈ N do
       if V[n] = True then
@@ -876,29 +757,15 @@ return D
 ```
 )]
 ))
-#show raw.where(block: true): code => {
-    grid(
-        columns: (auto, auto),
-        column-gutter: 1em,
-        row-gutter: par.leading,
-        align: (right, raw.align),
-        ..for line in code.lines {
-        (
-            text(fill: gray)[#line.number],
-            line.body,
-        )
-        },
-    )
-    }
 #set page(flipped: false)
 === Inserción de Cavidades
 Con la información del paso anterior es posible hacer efectiva la mutación de la malla para convertir los conjuntos de triángulos que forman las cavidades en polígonos arbitrarios formados por sus aristas de borde. 
 
-Actualmente, este paso es el único que no fue generalizado para cualquier tipo de malla, ya que el cómo se unen polígonos y que representa a cada uno es un detalle de implementación, en este caso particular, la inserción de cada cavidad se hace asumiendo que la malla usa una representación basada en _half edges_, haciendo uso de la clase auxiliar `MeshHelper`, la cual es un esqueleto que define operaciones que el refinador desea hacer sobre la malla, pero que la malla misma no necesita implementar por separado, ya que se logra mediante combinaciones de operaciones existentes que le incumben al refinador.
+Actualmente, este paso es el único que no fue generalizado para cualquier tipo de malla, ya que el cómo se unen polígonos y qué representa a cada uno es un detalle de implementación de la malla. En este caso particular, la inserción de cada cavidad se hace asumiendo que la malla usa una representación basada en _half edges_, haciendo uso de la clase auxiliar `MeshHelper`, la cual es un esqueleto que define operaciones que el generador desea hacer sobre la malla, pero que la malla misma no necesita implementar por separado, ya que se logra mediante combinaciones de operaciones existentes en la malla que el generador precisa realizar para formar las cavidades. De no ser este el caso, cada malla tendría que definir específicamente las combinaciones de operaciones para un generador concreto, lo que genera un acoplamiento fuerte entre malla y generador, que es justamente lo que se desea evitar.
 Esta implementación se detalla a continuación:
 
-+ Se marca que aristas de la totalidad de la malla pertenecen al borde de la cavidad actual, esto para permitir una búsqueda inmediata al momento de formar el polígono final.
-+ Se toma una arista de borde, en este caso la primera que aparezca en el objeto `Cavity` (puede ser cualquiera) y se calcula su arista `next`, luego, utilizando el método `CCWEdgeToVertex` se hace un barrido en sentido antihorario desde esta arista `next` buscando la siguiente arista que si es parte del borde de la cavidad, cuando esta es encontrada, se reconecta con la arista anterior y esta pasa a ser la siguiente arista a reconectar con otra arista de borde. Este proceso sigue hasta volver a la primera arista de borde tomada.
++ Se marca qué aristas de la totalidad de la malla pertenecen al borde de la cavidad actual, esto para permitir una búsqueda inmediata al momento de formar el polígono final.
++ Se toma una arista de borde, en este caso la primera que aparezca en el objeto `Cavity` (puede ser cualquiera) y se calcula su arista `next`, luego, utilizando el método `CCWEdgeToVertex` se hace un barrido en sentido antihorario desde esta arista `next` buscando la siguiente arista que si es parte del borde de la cavidad. Cuando esta es encontrada, se reconecta con la arista anterior y esta pasa a ser la siguiente arista a reconectar con otra arista de borde. Este proceso sigue hasta volver a la primera arista de borde tomada.
 
 Hecho esto, se actualiza también el conteo de aristas y polígonos que la malla reporta para que estos sean coherentes con la malla de salida, detalle importante al momento de escribir la malla a un archivo.
 
@@ -907,14 +774,12 @@ A continuación se presenta este proceso en forma de pseudocódigo:
 
 #figure(
     caption: [Algoritmo de inserción de cavidades],
-    [#box(
-        fill: rgb("#d3d3d3"),
-        inset: 8pt,
+    [#zebraw(
         radius: 4pt,
 ```
 P ← {∅}
 M' ← Copia de M
-p ← Cantidad de poligonos de M'
+p ← Cantidad de polígonos de M'
 a ← Cantidad de aristas de M'
 for cada cavidad dᵢ ∈ D do
     B ← Arreglo de booleanos para aristas de borde en la malla
@@ -941,7 +806,7 @@ return M', P
 )
 ])
 
-Notar que el arreglo $P$ guarda aristas, ya que en la representación basada en _half edges_, los polígonos se identifican con un solo _half edge_ de su interior. Aquí es cuando cobra particular importancia la distinción de qué es una salida como se mencionó en el capítulo anterior, y la claridad que brindan los _concepts_ de C++, ya que a modo general $P$ es un arreglo de `OutputIndex`, no importandole al refinador ni otras clases la malla subyacente a pesar de que el proceso de inserción si lo sea. En este caso `OutputIndex = EdgeIndex`.
+Notar que el arreglo $P$ guarda aristas, ya que en la representación basada en _half edges_, los polígonos se identifican con un solo _half edge_ de su interior. Aquí es cuando cobra particular importancia la distinción de qué es una salida como se mencionó en el capítulo anterior, y la claridad que brindan los _concepts_ de C++, ya que a modo general $P$ es un arreglo de `OutputIndex`, no importandole al generador ni otras clases la malla subyacente a pesar de que el proceso de inserción si lo sea. En este caso `OutputIndex = EdgeIndex`.
 
 En la @cavidadsvg se muestran ilustraciones paso por paso del cómputo e inserción de una cavidad, en a) se pueden ver 3 triángulos que forman una malla, luego, en b) se escoge el triángulo en rojo como semilla para iniciar el recorrido _BFS_ y se agregan los vecinos a la cola, en c), se revisa un vecino verificando que su circuncírculo contenga al circuncentro del triángulo rojo, dado que en este ejemplo si lo contiene, su arista compartida se marca para ser eliminada en d). Los pasos e) y f) siguen esta misma lógica con otro vecino, y en caso de que estos triángulos tuviesen otros vecinos, se hace la misma verificación siempre con el circuncentro del mismo triángulo semilla, deteniendo el recorrido.
 
@@ -957,13 +822,13 @@ En la @cavidadsvg se muestran ilustraciones paso por paso del cómputo e inserci
 ) <cavidadsvg>
 
 === Postprocesado
-Del mismo modo en que la primera etapa es altamente personalizable según el criterio de refinamiento y comparador escogido, la etapa de postprocesado posee una gran variedad de alternativas y posibilidad de extensión según el resultado deseado. Durante el trabajo de memoria se desarrolló una etapa de postprocesado centrada en eliminar todos los triángulos restantes de la malla (`MergeTrianglesStrategy`), uniéndolos con alguno de sus vecinos según alguna política (`PolygonMergingPolicy`) de fusión de polígonos. Las políticas existentes que unen polígonos con alguno de sus vecinos al momento de escribir el documento son las siguientes:
+Del mismo modo en que la primera etapa es altamente personalizable según el criterio de selección y comparador escogido, la etapa de postprocesado posee una gran variedad de alternativas y posibilidad de extensión según el resultado deseado, como tener una malla que favorezca más o menos polígonos de cierta cantidad de lados, con mayor o menor área mínima o máxima, ángulos u otra cualidad. Durante el trabajo de memoria se desarrolló una etapa de postprocesado centrada en eliminar todos los triángulos restantes de la malla (`MergeTrianglesStrategy`), uniéndolos con alguno de sus vecinos según alguna política (`PolygonMergingPolicy`) de fusión de polígonos. Las políticas existentes que unen polígonos con alguno de sus vecinos al momento de escribir el documento son las siguientes:
 - `EdgeLengthBasedMergingPolicy`: Une según la arista compartida con un vecino que tenga el mayor o menor largo según preferencia del usuario.
 - `SizeBasedNeighborMergingPolicy`: Une según la cantidad de lados de los vecinos, escogiendo el vecino con más o menos lados según preferencia del usuario.
 - `MaximizeConvexityMergingPolicy`: Intenta unir con un vecino de manera que el polígono resultante sea convexo, si no lo es, prueba con el vecino siguiente, si ninguna fusión resulta en un polígono convexo, no une los polígonos. Se considera que el polígono resultante es convexo si el signo del producto cruz entre 3 vértices consecutivos en una orientación en particular, ya sea horaria o antihoraria, tiene el mismo signo para todos los tripletes de vértices.
 - `NullPolygonMergingPolicy`: Clase auxiliar para ejecuciones del programa donde no se desea hacer postprocesado.
 
-La etapa de postprocesado hace uso de una estructura de datos _union find_@tarjan1975uf para mantener un registro de quienes son los representantes válidos de los polígonos. Dado que esta etapa también es altamente dependiente de detalles de la malla, esta estructura guarda índices de aristas _half edge_ como representantes. Una vez construida la estructura _union find_, se escoge el polígono a unir mediante la estrategia (`MergingStrategy`) con una política (`PolygonMergingPolicy`) particular.
+La etapa de postprocesado hace uso de una estructura de datos similar a _union find_@tarjan1975uf para mantener un registro de quienes son los representantes válidos de los polígonos. La diferencia entre _union find_ convencional y la estructura utilizada es que la operación de unión no es bilateral, es decir, unir A con B, significa algo distinto que unir B con A, puesto que el primero representa un índice de polígono cuyo representante será asignado, y el segundo, al índice del representante a asignar. Como no hay una manera concreta que defina unívocamente qué índice es cuál, esta lógica depende de como se llame al método de unión, definiéndose por convención que unir A con B significa que B es el nuevo representante de A. Dado que esta etapa también es altamente dependiente de detalles de la malla, en este caso, esta estructura guarda índices de aristas _half edge_ como representantes. Una vez construida la estructura _union find_, se escoge el polígono a unir mediante la estrategia (`MergingStrategy`) con una política (`PolygonMergingPolicy`) particular.
 
 El procedimiento para fusionar un polígono con uno de sus vecinos en una malla basada en _half edges_ es el siguiente:
 + Se cuenta cuantas aristas tiene el polígono a unir, asegurándose de que efectivamente sean aristas compartidas con un vecino y no bordes de la malla.
@@ -980,9 +845,7 @@ Esta etapa se puede describir con el siguiente pseudocódigo:
 
 #figure(
     caption: [Algoritmo de fusión de polígonos],
-    [#box(
-        fill: rgb("#d3d3d3"),
-        inset: 8pt,
+    [#zebraw(
         radius: 4pt,
 ```
 U ← Union-Find de aristas con sus representantes de polígono
@@ -1025,30 +888,37 @@ return M', P
 Al momento de realizar la fusión en la línea 24 se muta nuevamente la malla y es el momento en que se utiliza la clase `ConnectivityBackupT` interna a la malla particular que permite deshacer una unión de polígonos si la política no la determina apta. Por ejemplo, si `MaximizeConvexityMergingPolicy` determina que el polígono final es no convexo, utiliza la información de `ConnectivityBackupT` para reescribir los atributos `next` y `prev` de cada _half edge_ involucrado para que vuelvan a su estado original.
 
 == Reescritura de Polylla
-El algoritmo Polylla se movió a la clase `PolyllaRefiner` la cual extiende a `MeshRefiner` y puede ser usada en `PolygonalMesh` al igual que `DelaunayCavityRefiner`.
+El algoritmo Polylla se movió a la clase `PolyllaGenerator` la cual extiende a `MeshGenerator` y puede ser usada en `PolygonalMesh` al igual que `DelaunayCavityGenerator`.
 
-La lógica del algoritmo es exactamente la misma, solo se hicieron cambios 'estéticos' como renombrado de métodos, variables y uso de _alias_ en lugar de tipos primitivos cuando se trabaja con índices que representan cosas distintas.
+La lógica del algoritmo es exactamente la misma que había en Polylla-Mesh-DCEL@RepoPolylla, solo se hicieron cambios 'estéticos' como renombrado de métodos, variables y uso de _alias_ en lugar de tipos primitivos cuando se trabaja con índices que representan cosas distintas (véase @umlpolylla y @umlpolyllahelper).
 
-La gran diferencia que tiene esta implementación, es que recibe el tipo de malla como parámetro _template_, desacoplando levemente el refinador de detalles de la malla. Sin embargo, esta separación no puede hacerse por completo, ya que prácticamente todas las operaciones de Polylla dependen de la malla, pero esto queda encapsulado en una tercera clase, la clase `MeshHelper` (distinto _namespace_ que la clase `MeshHelper` del otro refinador), la cual tiene una especialización para _half edges_ con el código original adaptado.
+La gran diferencia que tiene esta implementación, es que recibe el tipo de malla como parámetro _template_, desacoplando levemente el generador de detalles de la malla. Sin embargo, esta separación no puede hacerse por completo, ya que prácticamente todas las operaciones de Polylla dependen de la malla, pero esto queda encapsulado en una tercera clase, la clase `MeshHelper` (distinto _namespace_ que la clase `MeshHelper` del otro generador), la cual tiene una especialización para _half edges_ con el código original adaptado.
 
-También se extraen algunos miembros de la clase `Polylla` original a otra clase llamada `PolyllaData`, la cual hereda de `MeshRefinerData` para tener mayor facilidad a la hora de rastrear estadísticas y mayor flexibilidad para casos en que distintas mallas necesiten miembros diferentes proveyendo una especialización particular a su parámetro _template_.
+También se extraen algunos miembros de la clase `Polylla` original a otra clase llamada `PolyllaData`, la cual hereda de `MeshGeneratorData` para tener mayor facilidad a la hora de rastrear estadísticas y mayor flexibilidad para casos en que distintas mallas necesiten miembros diferentes proveyendo una especialización particular a su parámetro _template_.
+
+La clase `PolyllaGenerator` se lee como una secuencia de los pasos descritos en la @AlgoPolylla, delegando el trabajo de realizar los pasos al `MeshHelper` que corresponda según el tipo de malla de manera explícita, lo que da un esquema claro para realizar una extensión a futuro que utilice un tipo de malla diferente.
 
 ]
 
 #capitulo(title: "Resultados")[
+En este capítulo se incluyen los resultados expermientales, que incluyen tablas, gráficos y mallas de salida.
+
+== Parámetros utilizados y características de la máquina
+Se utilizó la siguiente configuración de parámetros que produjo buenos valores experimentales:
+- Criterio de selección: `NullSelectionCriterion`
+- Comparador de triángulos: `EdgeLengthComparator` por arista más pequeña en orden ascendente.
+- Estrategia de unión: `MergeTriangles`
+- Política de unión: `SizeBasedMergingPolicy` según el vecino que tenga mayor tamaño (más aristas).
+
+
 El código se probó con el compilador _g++_ provisto por el entorno _mingw-64_ y también por el compilador _clang_ provisto por _Visual Studio_, ambos en Windows 11. Los resultados mostrados son aquellos producidos por el código compilado con _g++_ en una máquina con las siguientes características relevantes:
 - Sistema Operativo: Windows 11 25H2
 - CPU: Intel Core i5-10400 @ 2.90GHz, 6 _Cores_, 12 _Threads_
 - RAM: 16 GB DDR4 a 2666 MT/s
 - Almacenamiento: SSD ADATA SU630 500GB
 
-En este capítulo se incluyen los resultados con una configuración de parámetros que produjo buenos valores experimentales:
-- Criterio de refinado: `NullRefinementCriterion`
-- Comparador de triángulos: `EdgeLengthComparator` por arista más pequeña en orden ascendente.
-- Estrategia de unión: `MergeTriangles`
-- Política de unión: `SizeBasedMergingPolicy` según el vecino que tenga mayor tamaño (más aristas).
-
-Las mallas utilizadas se generaron utilizando los scripts `10000x10000RandomPoints.py` y `datagenerator.sh` presentes en el repositorio de Polylla-Mesh-DCEL@RepoPolylla, el cual genera vértices en un cuadrado de 10000 por 10000 y luego hace que Triangle@TriangleCodigo genere una triangulación de Delaunay a partir de ellos. Se generaron 5 mallas de cada tamaño con semillas: 139, 68, 70, 14 y 43. Luego, de forma paralela se ejecutó una instancia del programa con cada semilla para cada número de vértices, considerando que el algoritmo como tal es completamente secuencial y que el procesador de la máquina utilizada posee 6 núcleos, cada ejecución no debería afectar a ninguna otra.
+== Muestra de mallas generadas
+Las mallas triangulares utilizadas como base se generaron utilizando los scripts `10000x10000RandomPoints.py` y `datagenerator.sh` presentes en el repositorio de Polylla-Mesh-DCEL@RepoPolylla, el cual genera vértices en un cuadrado de 10000 por 10000 y luego hace que Triangle@TriangleCodigo genere una triangulación de Delaunay a partir de ellos. Se generaron 5 mallas de cada tamaño con semillas: 139, 68, 70, 14 y 43. Luego, de forma paralela se ejecutó una instancia del programa con cada semilla para cada número de vértices. Considerando que el algoritmo como tal es completamente secuencial y que el procesador de la máquina utilizada posee 6 núcleos, cada ejecución no debería afectar a ninguna otra.
 
 A continuación se muestran resultados de la aplicación del algoritmo basado en cavidades a una de estas mallas de 10 y 100 vértices, su malla Polylla respectiva con la implementación original y su malla basada en cavidades antes de postprocesar y después de postprocesar:
 
@@ -1056,16 +926,16 @@ A continuación se muestran resultados de la aplicación del algoritmo basado en
     columns: (auto,auto),
     inset: (x: 8pt, y:8pt),
     [#figure(
-    caption: [Malla poligonal generada por Triangle@TriangleCodigo de 10 vértices],
+    caption: [Malla poligonal generada por Triangle@TriangleCodigo de 10 vértices y 10 triángulos],
     image("imagenes/10pts_14.png")
 ) <MallaTriangle2>],[#figure(
-    caption: [Malla poligonal generada por Polylla original a partir de la @MallaTriangle2],
+    caption: [Malla poligonal generada por Polylla original a partir de la @MallaTriangle2 con 4 polígonos],
     image("imagenes/10pts_14_polylla_old.png")
 ) <MallaPolylla2>], [#figure(
-    caption: [Malla poligonal generada desde cavidades a partir de la @MallaTriangle2 antes de postprocesar],
+    caption: [Malla poligonal generada desde cavidades a partir de la @MallaTriangle2 antes de postprocesar con 5 polígonos],
     image("imagenes/10pts_14_pre.png")
 ) <MallaCavidadPre2>],[#figure(
-    caption: [Malla de la @MallaCavidadPre2 después de postprocesar],
+    caption: [Malla de la @MallaCavidadPre2 después de postprocesar con 3 polígonos],
     image("imagenes/10pts_14_post.png")
 ) <MallaCavidadPost2>]
 )
@@ -1074,48 +944,50 @@ A continuación se muestran resultados de la aplicación del algoritmo basado en
     columns: (auto,auto),
     inset: (x: 8pt, y:8pt),
     [#figure(
-    caption: [Malla poligonal generada por Triangle@TriangleCodigo de 100 vértices],
+    caption: [Malla poligonal generada por Triangle@TriangleCodigo de 100 vértices y 268 triángulos],
     image("imagenes/100pts_og.png")
 ) <MallaTriangle>],[#figure(
-    caption: [Malla poligonal generada por Polylla original a partir de la @MallaTriangle],
+    caption: [Malla poligonal generada por Polylla original a partir de la @MallaTriangle con 37 polígonos],
     image("imagenes/100pts_70_polylla_old.png")
 ) <MallaPolylla>], [#figure(
-    caption: [Malla poligonal generada desde cavidades a partir de la @MallaTriangle antes de postprocesar],
+    caption: [Malla poligonal generada desde cavidades a partir de la @MallaTriangle antes de postprocesar con 62 polígonos],
     image("imagenes/100pts_70_pre.png")
 ) <MallaCavidadPre>],[#figure(
-    caption: [Malla de la @MallaCavidadPre después de postprocesar],
+    caption: [Malla de la @MallaCavidadPre después de postprocesar con 48 polígonos],
     image("imagenes/100pts_70.png")
 ) <MallaCavidadPost>]
 )
 
 
 
-También, en la @MallaPolylla10 y la @MallaPolylla100, se muestra la misma malla de la @MallaPolylla y la @MallaPolylla2 respectivamente, con la nueva implementación, las cuales resultan en mallas idénticas:
+También, en la @MallaPolylla10 y la @MallaPolylla100, se muestra la misma malla de la @MallaPolylla2 y la @MallaPolylla respectivamente, con la nueva implementación, las cuales resultan en mallas idénticas:
 
 #figure(
-    caption: [Malla de la @MallaPolylla2 con la nueva implementación de Polylla],
+    caption: [Malla de la @MallaPolylla2 con la nueva implementación de Polylla con 4 polígonos],
     image("imagenes/10pts_14_polylla_new.png", width: 50%)
 ) <MallaPolylla10>
 #figure(
-    caption: [Malla de la @MallaPolylla con la nueva implementación de Polylla],
+    caption: [Malla de la @MallaPolylla con la nueva implementación de Polylla con 37 polígonos],
     image("imagenes/100pts_70_polylla_new.png", width: 50%)
 ) <MallaPolylla100>
-Las mallas anteriores se generaron cargando los archivos `.off` resultantes de ejecutar Polylla y el refinador basado en cavidades en el visualizador Camaron-Web@camaronweb. La malla original también se cargó en Camaron-Web después de convertirla a `.off` utilizando el _script_ `triangle_to_off.py` en el repositorio del proyecto.
+Las mallas anteriores se generaron cargando los archivos `.off` resultantes de ejecutar Polylla y el generador basado en cavidades en el visualizador Camaron-Web@camaronweb. La malla original también se cargó en Camaron-Web después de convertirla a `.off` utilizando el _script_ `triangle_to_off.py` en el repositorio del proyecto.
 
+== Tablas comparativas de cualidades geométricas, tiempo y memoria
 Las tablas siguientes muestran el promedio de estas 5 mallas por cada tamaño para distintas métricas:
 
 // RELLENAR!
 #figure(
-    caption: [Tabla comparativa de cantidad de polígonos],
+    caption: [Tabla comparativa de cantidad promedio de polígonos según cantidad de vértices para cada generador],
     table(
-        columns: (auto, auto, auto, auto, auto),
-        [Cantidad de vertices],[Malla original],[Refinador de cavidades],[Polylla Original],[Polylla Nuevo],
-        [10],[10],[3,2],[3,6],[3,6],
-        [$10^2$],[173,2],[51,6],[35,8],[35,8],
-        [$10^3$],[1920,4],[585,8],[319,4],[319,4],
-        [$10^4$],[19748],[6020,6],[3228],[3228],
-        [$10^5$],[199194,6],[60583,6],[32280,8],[32280,8],
-        [$10^6$],[1997479],[607874,6],[322388,2],[322388,2]
+        align: right,
+        columns: (auto, auto, auto, auto, auto, auto),
+        table.header(table.cell(align:center,[Vertices]),table.cell(align:center,[Malla original]),table.cell(align:center,[Cavidades (antes de postproceso)]), table.cell(align:center,[Cavidades (después de postproceso)]),table.cell(align:center,[Polylla Original]),table.cell(align:center,[Polylla Nuevo])),
+        [$10$],[10,0],[4,8],[3,2],[3,6],[3,6],
+        [$10^2$],[173,2],[68,6],[51,6],[35,8],[35,8],
+        [$10^3$],[1920,4],[756,2],[585,8],[319,4],[319,4],
+        [$10^4$],[19748,0],[7771,4],[6020,6],[3228,0],[3228,0],
+        [$10^5$],[199194,6],[78029,6],[60583,6],[32280,8],[32280,8],
+        [$10^6$],[1997479,0],[781730,0],[607874,6],[322388,2],[322388,2]
     )
 )
 
@@ -1123,21 +995,23 @@ Las tablas siguientes muestran el promedio de estas 5 mallas por cada tamaño pa
     caption: [Tabla comparativa de tiempo de ejecución total en milisegundos],
     table(
         columns: (auto, auto, auto, auto),
-        [Cantidad de vertices],[Polylla Original],[Refinador de cavidades],[Polylla nuevo],
-        [10],[0,005],[0,036],[0,005],
-        [$10^2$],[0,024],[0,277],[0,029],
-        [$10^3$],[0,178],[4,390],[0,221],
-        [$10^4$],[1,737],[82,131],[2,338],
-        [$10^5$],[26,938],[3273,302],[32,112],
-        [$10^6$],[299,942],[734807],[318,372],
+        align: right,
+        [Cantidad de vertices],[Polylla Original],[Generador de cavidades],[Polylla nuevo],
+        [10],[0,005],[0,039],[0,005],
+        [$10^2$],[0,024],[0,258],[0,029],
+        [$10^3$],[0,178],[4,215],[0,221],
+        [$10^4$],[1,737],[81,285],[2,338],
+        [$10^5$],[26,938],[3155,964],[32,112],
+        [$10^6$],[299,942],[586558,400],[318,372],
     )
-)
+) <tabtiempos>
 
 #figure(
     caption: [Tabla comparativa de uso de memoria total en Kilobytes, truncado a la unidad],
     table(
         columns: (auto, auto, auto, auto),
-        [Cantidad de vertices],[Polylla Original],[Refinador de cavidades],[Polylla nuevo],
+        align: right,
+        [Cantidad de vertices],[Polylla Original],[Generador de cavidades],[Polylla nuevo],
         [10],[2],[4],[3],
         [$10^2$],[30],[61],[44],
         [$10^3$],[325],[594],[404],
@@ -1148,10 +1022,11 @@ Las tablas siguientes muestran el promedio de estas 5 mallas por cada tamaño pa
 )
 
 #figure(
-    caption: [Tabla comparativa de porcentaje de convexidad],
+    caption: [Tabla comparativa de porcentaje de polígonos convexos],
     table(
         columns: (auto, auto, auto,),
-        [Cantidad de vertices],[Polylla Original],[Refinador de cavidades],
+        align: right,
+        [Cantidad de vertices],[Polylla Original],[Generador de cavidades],
         [10],[61,1%],[75%],
         [$10^2$],[41,3%],[70,5%],
         [$10^3$],[39,69%],[72,8%],
@@ -1164,9 +1039,10 @@ Las tablas siguientes muestran el promedio de estas 5 mallas por cada tamaño pa
 #figure(
     caption: [Tabla comparativa de ángulo mínimo y máximo en grados],
     table(
-        columns: (auto, auto, auto,auto, auto),
-        table.cell(stroke: none)[],table.cell(colspan:2)[Ángulos Polylla Original],table.cell(colspan:2)[Ángulos Refinador de cavidades],
-        [Cantidad de vertices],[Mínimo],[Máximo],[Mínimo],[Máximo],[10],[43,68],[206,97],[35,25],[207,96],
+        columns: (auto, 15%, 15%,19%,19%),
+        align: right,
+        table.cell(stroke: none)[],table.cell(colspan:2)[Ángulos Polylla Original],table.cell(colspan:2)[Ángulos Generador de cavidades],
+        table.header(table.cell(align:center,[Cantidad de vertices]),table.cell(align:center,[Mínimo]),table.cell(align:center,[Máximo]),table.cell(align:center,[Mínimo]),table.cell(align:center,[Máximo])),[10],[43,68],[206,97],[35,25],[207,96],
         [$10^2$],[21,11],[278,76],[11,70],[290,46],
         [$10^3$],[14,69],[290,22],[6,53],[305,70],
         [$10^4$],[6,16],[303,04],[1,66],[335,42],
@@ -1177,39 +1053,339 @@ Las tablas siguientes muestran el promedio de estas 5 mallas por cada tamaño pa
 
 Estos datos se obtuvieron a partir de múltiples ejecuciones de cada programa con la opción para escribir datos a formato `.json`, junto con el _script_ `count_edges.py` en el repositorio del proyecto disponible en #link("https://github.com/Tchy258/Delaunay-cavity").
 
-A continuación se presentan múltiples gráficos mostrando la distribución promedio de cantidad de polígonos según su cantidad de aristas en las mismas ejecuciones anteriores:
+También a continuación se muestra en detalle la distribución de valores de tiempo y memoria promedio para las mallas de generadas, tanto para el generador basado en cavidades como para ambas versiones de Polylla:
+
+#figure(
+    caption: [Tabla de tiempos promedio en milisegundos detallados para el generador basado en cavidades según cantidad de vértices, truncado a 3 decimales],
+    table(
+        columns: (auto, auto, auto, auto, auto, auto, auto),
+        align: right,
+        table.cell(stroke: none)[],
+        table.cell(colspan: 6, align: center)[Cantidad de vértices (Cavidad)],
+        table.header(
+            table.cell(align: center, [Métrica de tiempo]),
+            table.cell(align: center, [10]),
+            table.cell(align: center, [100]),
+            table.cell(align: center, [1000]),
+            table.cell(align: center, [10000]),
+            table.cell(align: center, [100000]),
+            table.cell(align: center, [1000000]),
+        ),
+        [Ordenamiento de triángulos],
+        [0,008],[0,057],[1,217],[20,441],[458,995],[8840,892],
+
+        [Cómputo de la cavidad],
+        [0,016],[0,123],[1,692],[16,846],[243,746],[2655,512],
+
+        [Inserción de la cavidad],
+        [0,001],[0,008],[0,298],[13,431],[1015,383],[407111,740],
+
+        [Postprocesado],
+        [0,011],[0,061],[0,917],[29,119],[1397,382],[167435,400],
+
+        table.hline(stroke: 2pt),
+
+        [Tiempo total],
+        [0,039],[0,258],[4,215],[81,285],[3155,964],[586558,400],
+    )
+) <tabcavity>
+
+
+
+#figure(
+    caption: [Tabla de uso promedio de memoria detallado en KB para el generador basado en cavidades según cantidad de vértices],
+    table(
+        columns: (auto, auto, auto, auto, auto, auto, auto),
+        align: right,
+        table.cell(stroke: none)[],
+        table.cell(colspan: 6, align: center)[Cantidad de vértices (Cavidad)],
+        table.header(
+            table.cell(align: center, [Métrica de memoria]),
+            table.cell(align: center, [10]),
+            table.cell(align: center, [100]),
+            table.cell(align: center, [1000]),
+            table.cell(align: center, [10000]),
+            table.cell(align: center, [100000]),
+            table.cell(align: center, [1000000]),
+        ),
+
+        [Array de cavidades],
+        [0,96],[16,63],[184,36],[1895,81],[19122,68],[191757,98],
+
+        [Array de visitados],
+        [0,01],[0,17],[1,92],[19,75],[199,19],[1997,48],
+
+        [_Union find_ de representantes],
+        [0,15],[2,18],[23,36],[237,98],[2393,55],[23979,82],
+
+        [Aristas de entrada],
+        [1,54],[24,58],[196,61],[1572,86],[25165,82],[201326,59],
+
+        [Aristas de salida],
+        [0,91],[13,07],[140,13],[1427,86],[14361,29],[143878,94],
+
+        [Vértices de entrada],
+        [0,24],[2,40],[24,00],[240,00],[2400,00],[24000,00],
+
+        [Vértices de salida],
+        [0,24],[2,40],[24,00],[240,00],[2400,00],[24000,00],
+
+        table.hline(stroke: 2pt),
+
+        [Memoria total],
+        [4,05],[61,42],[594,37],[5634,25],[66042,54],[610940,82],
+    )
+)
+
+#figure(
+    caption: [Tabla de tiempos promedio en milisegundos detallados para Polylla nuevo según cantidad de vértices, truncado a 3 decimales],
+    table(
+        columns: (36%, auto, auto, auto, auto, auto, auto),
+        align: right,
+        table.cell(stroke: none)[],
+        table.cell(colspan: 6, align: center)[Cantidad de vértices (Polylla nuevo)],
+        table.header(
+            table.cell(align: center, [Métrica de tiempo]),
+            table.cell(align: center, [10]),
+            table.cell(align: center, [100]),
+            table.cell(align: center, [1000]),
+            table.cell(align: center, [10000]),
+            table.cell(align: center, [100000]),
+            table.cell(align: center, [1000000]),
+        ),
+
+        [Etiquetado de aristas máximas],
+        [< 0,001],[0,006],[0,055],[0,664],[10,606],[116,328],
+
+        [Etiquetado de aristas frontera],
+        [< 0,001],[0,004],[0,046],[0,426],[5,835],[53,702],
+
+        [Etiquetado de aristas semilla],
+        [0,001],[0,006],[0,035],[0,372],[5,113],[48,793],
+
+
+        [Recorrido buscando polígonos no simples],
+        [0,002],[0,010],[0,070],[0,771],[9,259],[86,163],
+
+        [Reparación de polígonos no simples],
+        [< 0,001],[0,001],[0,012],[0,104],[1,296],[13,385],
+
+        [Recorrido y reparación],
+        [0,002],[0,012],[0,083],[0,875],[10,556],[99,548],
+
+        table.hline(stroke: 2pt),
+
+        [Tiempo total],
+        [0,005],[0,029],[0,221],[2,338],[32,112],[318,372],
+    )
+)
+
+#figure(
+    caption: [Tabla de uso promedio de memoria detallados en KB para Polylla nuevo según cantidad de vértices],
+    table(
+        columns: (auto, auto, auto, auto, auto, auto, auto),
+        align: right,
+        table.cell(stroke: none)[],
+        table.cell(colspan: 6, align: center)[Cantidad de vértices (Polylla nuevo)],
+        table.header(
+            table.cell(align: center, [Métrica de memoria]),
+            table.cell(align: center, [10]),
+            table.cell(align: center, [100]),
+            table.cell(align: center, [1000]),
+            table.cell(align: center, [10000]),
+            table.cell(align: center, [100000]),
+            table.cell(align: center, [1000000]),
+        ),
+
+        [Aristas máximas],
+        [0,04],[0,54],[5,84],[59,49],[598,39],[5994,96],
+
+        [Aristas frontera],
+        [0,04],[0,54],[5,84],[59,49],[598,39],[5994,96],
+
+        [Aristas semilla],
+        [0,02],[0,23],[2,05],[16,38],[131,07],[2097,15],
+
+        [Aristas barrera],
+        [0,04],[0,54],[5,84],[59,49],[598,39],[5994,96],
+
+        [Lista de triángulos],
+        [0,00],[0,01],[0,02],[0,04],[0,04],[0,06],
+
+        [Aristas de entrada],
+        [1,54],[24,58],[196,61],[1572,86],[25165,82],[201326,59],
+
+        [Aristas de salida],
+        [0,91],[13,07],[140,13],[1427,86],[14361,29],[143878,94],
+
+        [Vértices de entrada],
+        [0,24],[2,40],[24,00],[240,00],[2400,00],[24000,00],
+
+        [Vértices de salida],
+        [0,24],[2,40],[24,00],[240,00],[2400,00],[24000,00],
+
+        table.hline(stroke: 2pt),
+
+        [Memoria total],
+        [3,06],[44,31],[404,33],[3675,62],[46253,39],[413287,61],
+    )
+)
+
+#figure(
+    caption: [Tabla de tiempos promedio en milisegundos detallados para Polylla original según cantidad de vértices, truncado a 3 decimales],
+    table(
+        columns: (auto, auto, auto, auto, auto, auto, auto),
+        align: right,
+        table.cell(stroke: none)[],
+        table.cell(colspan: 6, align: center)[Cantidad de vértices (Polylla original)],
+        table.header(
+            table.cell(align: center, [Métrica de tiempo]),
+            table.cell(align: center, [10]),
+            table.cell(align: center, [100]),
+            table.cell(align: center, [1000]),
+            table.cell(align: center, [10000]),
+            table.cell(align: center, [100000]),
+            table.cell(align: center, [1000000]),
+        ),
+
+        [Etiquetado de aristas máximas],
+        [< 0,001],[0,003],[0,039],[0,426],[7,277],[96,912],
+
+        [Etiquetado de aristas frontera],
+        [< 0,001],[0,004],[0,042],[0,412],[5,960],[62,505],
+
+        [Etiquetado de aristas semilla],
+        [0,003],[0,008],[0,036],[0,317],[5,110],[50,080],
+
+        [Recorrido buscando polígonos no simples],
+        [< 0,001],[0,006],[0,050],[0,502],[7,478],[79,074],
+
+        [Reparación de polígonos no simples],
+        [< 0,001],[0,001],[0,009],[0,078],[1,111],[11,370],
+
+        [Recorrido y reparación],
+        [< 0,001],[0,007],[0,060],[0,581],[8,589],[90,445],
+        table.hline(stroke: 2pt),
+
+        [Tiempo total],
+        [0,005],[0,024],[0,178],[1,737],[26,938],[299,942],
+    )
+)
+
+#figure(
+    caption: [Tabla de uso promedio de memoria detallados en KB para Polylla original según cantidad de vértices],
+    table(
+        columns: (auto, auto, auto, auto, auto, auto, auto),
+        align: right,
+        table.cell(stroke: none)[],
+        table.cell(colspan: 6, align: center)[Cantidad de vértices (Polylla original)],
+        table.header(
+            table.cell(align: center, [Métrica de memoria]),
+            table.cell(align: center, [10]),
+            table.cell(align: center, [100]),
+            table.cell(align: center, [1000]),
+            table.cell(align: center, [10000]),
+            table.cell(align: center, [100000]),
+            table.cell(align: center, [1000000]),
+        ),
+
+        [Aristas máximas],
+        [0,04],[0,54],[5,84],[59,49],[598,39],[5994,96],
+
+        [Aristas frontera],
+        [0,04],[0,54],[5,84],[59,49],[598,39],[5994,96],
+
+        [Aristas semilla],
+        [0,02],[0,23],[2,05],[16,38],[131,07],[2097,15],
+
+        [Aristas barrera],
+        [0,04],[0,54],[5,84],[59,49],[598,39],[5994,96],
+
+        [Lista de triángulos],
+        [0,00],[0,01],[0,02],[0,04],[0,04],[0,06],
+
+        [Malla de entrada],
+        [0,76],[10,89],[116,78],[1189,88],[11967,74],[119899,12],
+
+        [Malla de salida],
+        [0,76],[10,89],[116,78],[1189,88],[11967,74],[119899,12],
+
+        [Vértices de entrada],
+        [0,48],[4,80],[48,00],[480,00],[4800,00],[48000,00],
+
+        [Vértices de salida],
+        [0,26],[2,42],[24,02],[240,02],[2400,02],[24000,02],
+
+        table.hline(stroke: 2pt),
+
+        [Memoria total],
+        [2,40],[30,87],[325,16],[3294,69],[33061,78],[331880,34],
+    )
+)
+
+
+== Distribución de polígonos según cantidad de aristas
+
+A continuación se presentan múltiples gráficos mostrando la distribución promedio de cantidad de polígonos según su cantidad de aristas en las mismas ejecuciones anteriores considerando el postprocesado en el caso del generador basado en cavidades:
 #pagebreak()
 #set page(flipped: true)
 #figure(
     [#image("imagenes/concave_convex_10.svg") ],
     caption: "Distribución promedio de polígonos según cantidad de aristas con 10 vértices"
-)
+) <dist10>
 #figure(
     [#image("imagenes/concave_convex_100.svg") ],
     caption: "Distribución promedio de polígonos según cantidad de aristas con 100 vértices"
-)
+) <dist100>
 #figure(
     [#image("imagenes/concave_convex_1000.svg") ],
     caption: "Distribución promedio de polígonos según cantidad de aristas con 1000 vértices"
-)
+) <dist1000>
 #figure(
     [#image("imagenes/concave_convex_10000.svg") ],
     caption: "Distribución promedio de polígonos según cantidad de aristas con 10000 vértices"
-)
+) <dist10000>
 #figure(
     [#image("imagenes/concave_convex_100000.svg") ],
     caption: "Distribución promedio de polígonos según cantidad de aristas con 100000 vértices"
-)
+) <dist100000>
 #figure(
     [#image("imagenes/concave_convex_1000000.svg") ],
     caption: "Distribución promedio de polígonos según cantidad de aristas con 1000000 de vértices"
-)
+) <dist1000000>
 #set page(flipped: false)
+== Análisis y discusión
+Los resultados obtenidos permiten comparar el comportamiento del algoritmo de generación de mallas basado en cavidades con Polylla, considerando métricas de eficiencia, calidad geométrica y características estructurales de las mallas generadas. En esta sección se analizan dichas métricas y se discuten sus implicancias en el contexto de la generación de mallas poligonales arbitrarias.
 
+=== Eficiencia en tiempo y memoria
+En términos de tiempo de ejecución y uso de memoria, los resultados muestran de forma consistente que el algoritmo basado en cavidades presenta un mayor costo computacional que Polylla, tanto en su implementación original como en su reescritura. Esta diferencia se vuelve más significativa a medida que aumenta el número de vértices de la malla de entrada, lo que sugiere una mayor complejidad asociada a las etapas de cómputo de cavidades, manejo de estructuras auxiliares y postprocesado.
+
+Este comportamiento es esperable dado que el algoritmo propuesto realiza operaciones adicionales respecto a Polylla, tales como el cálculo explícito de circuncentros, la identificación de conjuntos de triángulos que forman cavidades y la posterior inserción de estas en la malla. Además, la flexibilidad del diseño basado en criterios de selección, comparadores y políticas de unión configurables con _templates_; prioriza la extensibilidad y claridad del código por sobre la optimización extrema del rendimiento.
+
+La reescritura de Polylla dentro del mismo marco de diseño permitió confirmar que parte de la brecha de rendimiento se debe a la lógica propia del algoritmo de cavidades y no únicamente a decisiones de implementación, ya que, aunque la diferencia de rendimiento entre la implementación original de Polylla y la reescritura no es despreciable (@tabtiempos), sobre todo en uso de memoria, si es pequeña en comparación a la brecha que tiene Polylla con el algoritmo basado en cavidades.
+
+=== Calidad geométrica de las mallas
+Desde el punto de vista de la calidad geométrica, el algoritmo basado en cavidades demuestra ser capaz de generar mallas poligonales válidas y con un alto porcentaje de polígonos convexos. Si bien Polylla presenta, en promedio, mejores valores en métricas como una cantidad de polígonos mucho menor y menores ángulos máximos, las mallas generadas por cavidades mantienen una calidad adecuada para su uso en métodos numéricos que admiten geometría poligonal arbitraria. También tiende a generar ángulos mínimos mayores, lo que brinda mejor estabilidad a programas que procesen estas mallas, puesto que es menos probable que consideren 3 vértices como colineales, producto de errores de precisión (aproximación del ángulo a 0).
+
+Un aspecto relevante es la distribución del número de aristas por polígono. Los resultados indican que el algoritmo basado en cavidades tiende a concentrar la mayor parte de los polígonos en un rango acotado, aproximadamente entre 4 y 7 (y en general hasta 10) aristas, como se ve en la @dist10 hasta la @dist1000000. Esta convergencia sugiere un mayor control estructural sobre la forma de los elementos generados, lo que puede resultar beneficioso para métodos como el Virtual Element Method (VEM), donde se busca un balance entre simplicidad geométrica y flexibilidad topológica.
+
+En contraste, Polylla tiende a generar polígonos con una mayor cantidad de aristas, lo que puede ser ventajoso en ciertos contextos, pero también puede introducir problemas al intentar utilizar estas mallas para el VEM.
+
+Es importante destacar también que tanto Polylla como el generador basado en cavidades mantienen la misma cantidad de vértices de entrada en la salida.
+
+=== Impacto del postprocesado
+El paso de postprocesado incorporado en el algoritmo basado en cavidades tiene un impacto significativo en la reducción del número de polígonos y en la mejora de la estructura final de la malla.
+
+Sin embargo, este beneficio también tiene un costo asociado en tiempo de ejecución, ya que, como se ve en la @tabcavity, este paso toma el segundo mayor tiempo, solo superado por la inserción inicial de las cavidades, reforzando la idea de que existe un compromiso explícito entre calidad estructural y eficiencia computacional dentro del enfoque propuesto.
+
+=== Discusión
+En conjunto, los resultados permiten afirmar que el algoritmo basado en cavidades no se equipara con Polylla en términos de rendimiento, siendo bastante más lento y utilizando más memoria que este, pero sí ofrece una alternativa viable y flexible para la generación de mallas poligonales de alta convexidad y geometría controlada al tener una concentración de polígonos con una cantidad de aristas entre 4 y 7. Su diseño modular y extensible lo posiciona como una base adecuada para futuras mejoras, optimizaciones y extensiones a otras representaciones de malla.
+
+Las limitaciones observadas en eficiencia, junto con la ausencia de pruebas directas utilizandolas para el VEM debido a restricciones técnicas, abren líneas claras de trabajo futuro orientadas a optimizar la implementación, fortalecer la validación mediante tests unitarios y evaluar empíricamente el desempeño de las mallas generadas en aplicaciones numéricas concretas.
 ]
 
 #capitulo(title: "Conclusión")[
-    A partir de los resultados obtenidos es posible concluir que el algoritmo basado en cavidades, si bien no tiene mejor eficiencia en cuanto a tiempo o memoria comparado a Polylla, provee una alternativa viable para generar mallas de polígonos arbitrarios con un muy alto nivel de convexidad que converge al rango entre las 4 y las 10 aristas aproximadamente.
+    A partir de los resultados obtenidos es posible concluir que el algoritmo basado en cavidades, si bien no tiene mejor eficiencia en cuanto a tiempo o memoria comparado a Polylla, provee una alternativa viable para generar mallas de polígonos arbitrarios con un muy alto nivel de convexidad que converge al rango entre las 4 y 7 aristas aproximadamente. También la solución elaborada es bastante modular, permitiendo extensiones futuras de manera correcta al hacer uso de _templates_ y _concepts_.
 
     Dado que este trabajo de memoria fue realizado en un semestre, tiene muchos aspectos a mejorar, en particular, es altamente necesario diseñar una forma general de escribir pruebas (o _tests_) unitarias que se adapten bien a la variedad de configuraciones posibles probando invariantes sólidas que se cumplan transversalmente e idealmente sin tener que repetir tests múltiples veces. También es de suma importancia buscar maneras más eficientes de implementar el algoritmo para acercarse más al rendimiento de Polylla sin comprometer la legibilidad o flexibilidad del código. Por otra parte, quedó pendiente el probar las mallas generadas por el algoritmo para el VEM, puesto que el repositorio@RepoVEMPolylla utilizado para mostrar el uso de mallas hechas con Polylla en el VEM mencionado en su artículo@PolyllaPaper, utiliza métodos que a día de hoy están deprecados en versiones modernas de las librerías requeridas, además el entorno en el que se ejecutaron estas pruebas es difícil de replicar en Windows debido a que las veriones antiguas de las librerías requieren que ciertos componentes, en particular cabeceras específicas de C, estén presentes en el sistema anfitrión para ser instaladas correctamente. Finalmente, es necesario idear una forma más sencilla de generar los archivos ejecutables, ya que el método actual que depende de un _script_ de _Python_ se puede hacer difícil de mantener en el tiempo y además, estos archivos generados tienen nombres demasiado largos, lo cual es un problema para el sistema operativo Windows sin antes habilitar la capacidad de tener rutas de archivo de tamaño superior a 260.
 ]
@@ -1365,4 +1541,11 @@ A diferencia de los formatos de malla, `.mat` no impone una estructura geométri
     En el siguiente enlace se encuentra un diagrama de clases completo de la solución en formato _svg_ para ser visualizado en un computador con el nivel de ampliación que se desee: #link("https://github.com/Tchy258/Delaunay-cavity/blob/main/diagrams/delaunay_cavity.svg")
 
     Dado su enorme tamaño no es adecuado para mostrarse completo en el informe.
+
+    También se provee el diagrama completo de la implementación original de Polylla previamente mostrado por partes en el capítulo 3
+
+    #figure(
+        image("imagenes/polylla_uml.svg", height: 90%),
+        caption: [Diagrama UML completo de la implementación de Polylla original]
+    )
 ]
