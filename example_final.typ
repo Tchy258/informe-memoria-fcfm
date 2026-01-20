@@ -6,7 +6,8 @@
     titulo: "GENERACIÓN DE MALLAS POLIGONALES A PARTIR DE CAVIDADES",
     autoria: (nombre: "NICOLÁS ESCOBAR ZARZAR", pronombre: pronombre.el),
     profesores: ((nombre: "NANCY HITSCHFELD KAHLER", pronombre: pronombre.ella),),
-    coguias: ((nombre: "SERGIO SALINAS FERNÁNDEZ", pronombre: pronombre.el),)
+    coguias: ((nombre: "SERGIO SALINAS FERNÁNDEZ", pronombre: pronombre.el),),
+    anno: 2025
 )
 #import "@preview/zebraw:0.6.1": *
 #show: zebraw
