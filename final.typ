@@ -96,21 +96,8 @@
         first-line-indent: 15pt,
         spacing: 2em, // Espacio entre párrafos
     ) // Formato de párrafos
-    show figure.where(kind: raw): set figure(supplement: [Código])
-    show raw.where(block: true): code => {
-    grid(
-        columns: (auto, auto),
-        column-gutter: 1em,
-        row-gutter: par.leading,
-        align: (right, raw.align),
-        ..for line in code.lines {
-        (
-            text(fill: gray)[#line.number],
-            line.body,
-        )
-        },
-    )
-    }
+    show figure.where(kind: "code"): set figure(supplement: [Código])
+    show figure.where(kind: "code"): set block(breakable: true)
     set cite(style: "council-of-science-editors") // esto deja las citas contiguas como [1, 2] o [1-3]
     pagebreak(weak: true) // Salto de página
     counter(page).update(1) // Reestablecer el contador de páginas
@@ -143,18 +130,20 @@
 }
 
 #let backmatter-section(title, label, doc) = {
+    set par(first-line-indent: 0pt)
     let cnt = counter(heading)
-    show heading.where(level: 1): it => text(size: 24pt, weight: "bold")[Anexo #cnt.display("A") \ \ #it.body]
-    v(85pt)
+    show heading.where(level: 1): it => text(size: 24pt, weight: "bold")[Anexo #cnt.display("A"): #it.body \ \ ]
+    //v(10pt)
     [#heading(
         title,
         numbering: "A.",
         outlined: true,
         supplement: "Anexo",
     ) #label] // Para añadir la label, debe estar en modo markup
-    v(30pt)
+    set par(first-line-indent: 15pt)
+    v(-20pt)
     doc
-    pagebreak(weak: true)
+    //pagebreak(weak: true)
 }
 
 #let resumen(

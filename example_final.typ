@@ -4,7 +4,7 @@
 #let data = (
     ..example-metadata,
     titulo: "GENERACIÓN DE MALLAS POLIGONALES A PARTIR DE CAVIDADES",
-    autoria: (nombre: "NICOLÁS ESCOBAR ZARZAR", pronombre: pronombre.el),
+    autoria: (nombre: "NICOLÁS EDUARDO ESCOBAR ZARZAR", pronombre: pronombre.el),
     profesores: ((nombre: "NANCY HITSCHFELD KAHLER", pronombre: pronombre.ella),),
     coguias: ((nombre: "SERGIO SALINAS FERNÁNDEZ", pronombre: pronombre.el),),
     anno: 2025
@@ -332,6 +332,7 @@ A continuación se describirá a modo general como funciona esta implementación
 
 Esta implementación de Polylla (@AlgoPolylla) escrita en C++, a diferencia de la implementación original basada en caras@PolyllaPaper, usa _half-edges_ (@HalfEdgeStructDef). Polylla-Mesh-DCEL hace uso de 2 estructuras de datos y 2 clases esenciales, siendo estas: `vertex`, `halfEdge`, `Triangulation` y `Polylla`. Estas son utilizadas dentro de una función `main` que recibe argumentos posicionales con distinto significado según su cantidad, para procesar archivos o determinar una ruta de salida. 
 
+#pagebreak(weak: true)
 A continuación se presentan figuras mostrando partes del diagrama UML de clases de la implementación presente en el @Diag. La iconografía de estas figuras y otras representaciones UML está disponible en el @PUMLSyn.
 
 #figure(
@@ -341,15 +342,13 @@ A continuación se presentan figuras mostrando partes del diagrama UML de clases
 
 La estructura `vertex` describe un punto, o vértice, de la malla conteniendo sus coordenadas _x_ e _y_. También posee un booleano que indica si el vértice es parte del borde de la malla y un número entero que representa un índice hacia algún `halfEdge` que tiene a este vértice como origen dentro de un objeto de la clase `Triangulation` en un arreglo de tamaño dinámico (implementado con un objeto de clase `vector` de C++).
 
-La estructura `halfEdge` contiene toda la información que compone a un _half-edge_ como se mencionó en la @HalfEdgeStructDef (salvo por _target_ que es implícito). Todos estos atributos son índices a vectores dentro de la clase `Triangulation` resumida a continuación.
+La estructura `halfEdge` contiene toda la información que compone a un _half-edge_ como se mencionó en la @HalfEdgeStructDef (salvo por _target_ que es implícito). Todos estos atributos son índices a vectores dentro de la clase `Triangulation` de la @umltriangulation. Esta clase, posee 2 miembros de tipo `vector` que contienen objetos `vertex` y objetos `halfEdge` respectivamente. Además, define los métodos necesarios para recorrer la malla haciendo uso de los índices definidos en `vertex` y `halfEdge`. Estos incluyen todas las operaciones definidas en la @HalfEdgeStructDef como _next_, _prev_, _origin_, _target_ y _twin_. Notar que no hay un atributo _target_ en la estructura `halfEdge`, ya que este está guardado de forma implícita como el atributo `origin` del `halfEdge` apuntado por `twin`.
 
 
 #figure(
     caption: [Representación UML de la clase `Triangulation` de Polylla-Mesh-DCEL@RepoPolylla],
-    image("imagenes/triangulation_uml.png")
-)
-
-La clase `Triangulation`, posee 2 miembros de tipo `vector` que contienen objetos `vertex` y objetos `halfEdge` respectivamente. Además, define los métodos necesarios para recorrer la malla haciendo uso de los índices definidos en `vertex` y `halfEdge`. Estos incluyen todas las operaciones definidas en la @HalfEdgeStructDef como _next_, _prev_, _origin_, _target_ y _twin_. Notar que no hay un atributo _target_ en la estructura `halfEdge`, ya que este está guardado de forma implícita como el atributo `origin` del `halfEdge` apuntado por `twin`.
+    image("imagenes/triangulation_uml.png", height: 80%)
+) <umltriangulation>
 
 Uno de los constructores de la clase `Triangulation` lee archivos de texto con información geométrica para generar la malla, en particular, aquellos generados por Triangle@TrianglePaper, los cuales consisten en:
 - `.node`: Contiene todos los vértices de la malla junto con sus coordenadas.
@@ -361,7 +360,7 @@ También tiene un constructor para leer archivos en formato `.off`, extensamente
 La clase `Triangulation` es extensamente utilizada dentro de la clase `Polylla`:
 #figure(
     caption: [Representación UML de la clase `Polylla` de Polylla-Mesh-DCEL@RepoPolylla],
-    image("imagenes/og_polylla_uml.png"),
+    image("imagenes/og_polylla_uml.png", height: 70%),
 )
 
 La clase `Polylla` implementa en su totalidad el algoritmo descrito en la @AlgoPolylla. Esta recibe como argumento en su constructor un objeto de la clase `Triangulation` o los argumentos necesarios para generar uno. Posterior a ello llama al método `construct_Polylla()` que realiza todas las etapas del algoritmo para generar la malla: etiquetado de aristas máximas (vector `max_edges`) y aristas frontera (vector `frontier_edges`) para posteriormente etiquetar aristas semilla (vector `seed_edges`) para formar las regiones terminales, recorrer dichas regiones terminales para corroborar si forman un polígono simple y si no, repararlo.
@@ -413,7 +412,7 @@ Esta clase implementa la estructura _half-edge_ haciendo uso de los _structs_ `H
 
 #figure(
     caption: [Representación UML de las clases `Vertex`, `HEVertex` y `HalfEdge`],
-    image("imagenes/umlhedges.png")
+    image("imagenes/umlhedges.png", width: 85%)
 ) <HEdgesUML>
 
 Además de los atributos que poseían los _struct_ `vertex` y `halfEdge` de Polylla-Mesh-DCEL, se hace una distinción entre un vértice genérico (`Vertex`) y un vértice especializado para _half-edges_ (`HEVertex`), puesto que en la mayoría de los casos es suficiente operar con un vértice como si tuviese tipo `Vertex` con las operaciones que este define, son de particular utilidad sus métodos públicos:
@@ -493,7 +492,7 @@ Dentro de su archivo _header_, cada enumeración también define un arreglo est�
 La clase `MeshGeneratorData` define dentro de sí métodos altamente genéricos para calcular un valor 'total' de algún grupo de estadística, particularmente, de tiempo y memoria.
 
 #figure(
-    image("imagenes/uml_polylla_data.png"),
+    image("imagenes/uml_polylla_data.png", width: 60%),
     caption: [Representación UML de la clase `PolyllaData`]
 ) <umlpolylladata>
 
@@ -541,7 +540,7 @@ En este último _concept_ se puede observar la gran flexibilidad que otorga un _
 
 La clase `DelaunayCavityGenerator` hace uso de la estructura `Cavity` para encapsular los componentes de una cavidad a medida que estas se van construyendo, esta estructura se puede ver en la @umlcavity.
 #figure(
-    image("imagenes/uml_cavity.png"),
+    image("imagenes/uml_cavity.png", width: 70%),
     caption: [Representación UML de la estructura `Cavity`]
 ) <umlcavity>
 
@@ -550,7 +549,7 @@ La estructura de cavidad guarda los triangulos que componen la cavidad, sus aris
 Al igual que la clase `PolyllaGenerator`, la clase `DelaunayCavityGenerator` también posee su implementación de `MeshGeneratorData` y su `MeshHelper` respectivo, pero a diferencia de `PolyllaGenerator`, tiene más pasos que se pueden generalizar para todo tipo de malla y no dependen por completo en su `MeshHelper`.
 
 #figure(
-    image("imagenes/uml_cavity_data.png"),
+    image("imagenes/uml_cavity_data.png", width: 50%),
     caption: [Representación UML de la clase `DelaunayCavityData`]
 ) <umlcavitydata>
 
@@ -588,12 +587,15 @@ Inicialmente, se planteaba la capacidad de componer estos criterios de selecció
 - `NotCriterion`: Invierte un criterio, es decir, prioriza aquellos que no son priorizados por un criterio particular.
 - `AndCriteria`: Dados dos criterios (incluyéndose a sí mismo como 'un criterio'), solo prioriza un triángulo si este es priorizado por ambos criterios. Cumple la función de un _y_ lógico.
 - `OrCriteria`: Similar al anterior, pero le basta con que sea priorizado por un criterio o ambos. Cumple la función de un _o_ lógico.
-
-
+#v(-6pt)
 Esta parte del algoritmo sigue los pasos del siguiente pseudocódigo:
+#v(-15pt)
 #table(columns: 100%,)[Etapa 1: Selección de triángulos][Entrada: Malla inicial $M$, Comparador $O$, Criterio de selección $R$][Salida: Conjunto de triángulos ordenados antes del cómputo de cavidades]
+#v(-20pt)
+
 #figure(
     caption: [Algoritmo de selección de triangulos],
+    kind: "code",
     [#zebraw(
         radius: 4pt,
 ```
@@ -643,11 +645,11 @@ Finalmente, las coordenadas del circuncentro real estarán ubicadas en:
 $ U = U' + A $
 Con esta información, esta etapa del algoritmo se describe de la manera siguiente:
 #table(columns: 100%,)[Etapa 2.1: Cálculo de circuncentros][Entrada: Triángulo inicial $t_i$][Salida: Circuncentro de $t_i$]
+#v(-11pt)
 #figure(
     caption: [Algoritmo de computo de circuncentros],
-    [#box(
-        fill: rgb("#d3d3d3"),
-        inset: 8pt,
+    kind: "code",
+    [#zebraw(
         radius: 4pt,
 ```
 V₁,V₂,V₃ ← Vértices de tᵢ
@@ -658,8 +660,8 @@ c'← Circuncentro de tᵢ desplazado en V₁
 c ← Circuncentro de tᵢ
 return c
 ```
-)
-])
+)])
+
 
 Al remover un triángulo de la cola, este se marca como parte de la cavidad, posteriormente, se revisa si es un triángulo de borde de la malla, ya que de ser el caso, una de sus aristas debe preservarse en la cavidad. Luego se revisa cada uno de sus vecinos verificando tres condiciones en orden:
 + Si el triángulo vecino ya fue visitado en este recorrido, se procede al vecino siguiente en la cola _BFS_ sin hacer nada más.
@@ -671,13 +673,15 @@ Estas aristas de borde se guardan por separado, ya que serán las únicas arista
 
 Una vez que se hace el recorrido completo de un triángulo según el orden del paso 1, se inicia un nuevo recorrido _BFS_ tomando como punto de partida el triángulo siguiente si y solo sí este no forma parte de una cavidad previamente computada, de lo contrario, el recorrido no se realiza desde este triángulo pasando al siguiente hasta haber intentado iniciar un recorrido por todos los triángulos de la malla.
 
-A continuación se presentan estos mismos pasos en forma de pseudocódigo:
+En la página siguiente se presentan estos mismos pasos en forma de pseudocódigo:
 
 
 #table(columns: 100%,)[Etapa 2.2: Cómputo de cavidades][Entrada: Malla inicial $M$, Conjunto de triángulos ordenados $C$][Salida: Conjunto de cavidades $D$ ]
 #set page(flipped: true)
+#v(-8pt)
 #figure(
     caption: [Algoritmo de cómputo de cavidades],
+    kind: "code",
     grid( columns: (50%, 50%),
     [
     #zebraw(
@@ -775,6 +779,7 @@ A continuación se presenta este proceso en forma de pseudocódigo:
 
 #figure(
     caption: [Algoritmo de inserción de cavidades],
+    kind: "code",
     [#zebraw(
         radius: 4pt,
 ```
@@ -840,12 +845,13 @@ El procedimiento para fusionar un polígono con uno de sus vecinos en una malla 
 
 Es importante destacar que el invariante del paso 2 es esencial para mantener coherencia topológica en la malla, puesto que, de no cumplirse, habrá aristas inválidas en la salida que no realizan un ciclo completo a lo largo del borde de un polígono si se recorren con `next`.
 
-Esta etapa se puede describir con el siguiente pseudocódigo:
-#pagebreak()
+Esta etapa se puede describir con el pseudocódigo presente en la página siguiente:
+
 #table(columns: 100%,)[Paso 5: Postprocesado][Entrada: Malla mutada $M'$, Conjunto de salidas $P$, Estrategia de unión $S$, Política de unión $J$][Salida: Malla final $M'$ y arreglo de polígonos de salida $P$ ]
 
 #figure(
     caption: [Algoritmo de fusión de polígonos],
+    kind: "code",
     [#zebraw(
         radius: 4pt,
 ```
@@ -1393,6 +1399,10 @@ Las limitaciones observadas en eficiencia, junto con la ausencia de pruebas dire
 
 #show: end-doc
 
+#v(85pt)
+#text(size: 24pt, weight: "bold", heading("ANEXOS", outlined: true, numbering: none))
+#v(30pt)
+
 #apendice(title: "Repositorio del proyecto", label: label("RepoProyecto"))[
     El repositorio del proyecto con todo el código se encuentra disponible en #link("https://github.com/Tchy258/Delaunay-cavity"), posee un archivo _README.md_ en inglés con las instrucciones para compilar y ejecutar los algoritmos.
 ]
@@ -1400,8 +1410,7 @@ Las limitaciones observadas en eficiencia, junto con la ausencia de pruebas dire
 #apendice(title: "Formatos de archivo para mallas geométricas", label: label("formatos"))[
 == Formato `.off`
 
-El formato `.off` (Object File Format) es un formato de texto utilizado para representar geometría poligonal en tres dimensiones, especialmente mallas de superficies.
-
+El formato `.off` (Object File Format) es un formato de texto utilizado para representar geometría poligonal en tres dimensiones, especialmente mallas de superficies.\ \
 Su estructura general es:
 
 - Una cabecera con la palabra `OFF`.
